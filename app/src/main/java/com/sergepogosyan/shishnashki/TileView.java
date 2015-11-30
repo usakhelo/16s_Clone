@@ -1,5 +1,10 @@
 package com.sergepogosyan.shishnashki;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -10,6 +15,8 @@ import android.graphics.drawable.ShapeDrawable;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,10 +87,10 @@ public class TileView extends View {
 
   private void initTiles() {
     mTiles = new ArrayList<>();
-    ArrayList<Integer> nums = new ArrayList(Arrays.asList(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16));
-//    Collections.shuffle(nums);
+    ArrayList<Integer> nums = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16));
+    Collections.shuffle(nums);
     for (int index : nums) {
-      mTiles.add(new Tile(index));
+      mTiles.add(new Tile(index, this));
     }
   }
 
@@ -94,35 +101,65 @@ public class TileView extends View {
     // Account for padding
     mLeftPad = getPaddingLeft();
     mTopPad = getPaddingTop();
-    float xpad = (float) (getPaddingLeft() + getPaddingRight());
-    float ypad = (float) (getPaddingTop() + getPaddingBottom());
+    float xpad = mLeftPad + getPaddingRight();
+    float ypad = mTopPad + getPaddingBottom();
 
     float ww = (float) w - xpad;
     float hh = (float) h - ypad;
 
-    mTileMargin = ww / 4f / 5f;
+    mTileMargin = ww / 4 / 5;
     mBounds = new RectF(0, 0, ww, hh);
     mTileWidth = (mBounds.width() - (mTileMargin * 3)) /4f;
     mTileHeight = (mBounds.height() - (mTileMargin * 3))/4f;
 
     for (Tile tile : mTiles) {
-      tile.setWidth(mTileWidth);
-      tile.setHeight(mTileHeight);
+      tile.setWidth(0);
+      tile.setHeight(0);
+    }
+//    onDataChanged();
+    startAnimation();
+  }
+
+  private void startAnimation() {
+    List<Animator> animators = new ArrayList<>();
+    for (int i = 0; i < mTiles.size(); i++) {
+      Tile tile = mTiles.get(i);
+      ObjectAnimator zoomInX = ObjectAnimator.ofFloat(tile, "width", mTileWidth / 5f, mTileWidth);
+      ObjectAnimator zoomInY = ObjectAnimator.ofFloat(tile, "height", mTileHeight / 5f, mTileHeight);
+      zoomInX.setDuration(400);
+      zoomInY.setDuration(400);
+      zoomInX.setInterpolator(new OvershootInterpolator());
+      zoomInY.setInterpolator(new OvershootInterpolator());
+      AnimatorSet zoomIn = new AnimatorSet();
+      zoomIn.playTogether(zoomInX, zoomInY);
+      zoomIn.setStartDelay( i * 50);
+      animators.add(zoomIn);
     }
 
-//    onDataChanged();
+    AnimatorSet animatorSet = new AnimatorSet();
+    animatorSet.playTogether(animators);
+    animatorSet.start();
+
+//    ValueAnimator colorAnim = ObjectAnimator.ofInt(this, "backgroundColor", 0xffFF8080, 0xff8080FF);
+//    colorAnim.setDuration(3000);
+//    colorAnim.setEvaluator(new ArgbEvaluator());
+//    colorAnim.setRepeatCount(ValueAnimator.INFINITE);
+//    colorAnim.setRepeatMode(ValueAnimator.REVERSE);
+//    colorAnim.start();
   }
 
   @Override
   protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
 
+    float tileWidth = mBounds.width() / 4;
+    float tileHeight = mBounds.height() / 4;
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
         Tile tile = mTiles.get((i * 4) + j);
         canvas.save();
-        float xOffset = j == 0 ? mLeftPad: mLeftPad + ((mTileWidth + mTileMargin) * j);
-        float yOffset = i == 0 ? mTopPad: mTopPad + ((mTileHeight + mTileMargin) * i);
+        float xOffset = mLeftPad + (tileWidth * j) + ((tileWidth / 2) - (tile.getWidth() / 2));
+        float yOffset = mTopPad + (tileHeight * i) + ((tileHeight / 2) - (tile.getHeight() / 2));
         canvas.translate(xOffset, yOffset);
         tile.getShape().draw(canvas);
 

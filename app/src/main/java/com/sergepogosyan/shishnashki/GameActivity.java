@@ -22,23 +22,6 @@ public class GameActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.sample_tile_view);
-//    but = (Button)findViewById(R.id.button);
-//    but.setOnClickListener(new View.OnClickListener() {
-//      @Override
-//      public void onClick(View view) {
-//        but.animate().setDuration(400)
-//            .setInterpolator(new AccelerateDecelerateInterpolator())
-//            .rotationBy(90f)
-//            .withEndAction(
-//            new Runnable() {
-//          public void run() {
-//            but.animate().setDuration(200)
-//                .setInterpolator(new DecelerateInterpolator())
-//                .rotationBy(-90f);
-//          }
-//        });
-//      }
-//    });
   }
 
   @Override

@@ -6,12 +6,13 @@ import android.graphics.Shader;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
 import android.graphics.drawable.shapes.Shape;
+import android.view.View;
 
 public class Tile {
   private float x = 0, y = 0;
   private int color;
   private Paint mPaint;
-
+  private View mView;
   private ShapeDrawable mShape;
 
   private int mNumber;
@@ -57,6 +58,7 @@ public class Tile {
   public void setWidth(float width) {
     Shape s = mShape.getShape();
     s.resize(width, s.getHeight());
+    mView.postInvalidate();
   }
 
   public float getHeight() {
@@ -65,14 +67,15 @@ public class Tile {
   public void setHeight(float height) {
     Shape s = mShape.getShape();
     s.resize(s.getWidth(), height);
+    mView.postInvalidate();
   }
 
-  public Tile(int num) {
+  public Tile(int num, View view) {
     mNumber = num;
+    mView = view;
     float rad = 8f;
     RoundRectShape shape = new RoundRectShape(new float[] {rad, rad, rad, rad, rad, rad, rad, rad, rad}, null, null);
     mShape = new ShapeDrawable(shape);
-//    mExampleDrawable.setCallback(this);
     int red = (int)(Math.random() * 255);
     int green = (int)(Math.random() * 255);
     int blue = (int)(Math.random() * 255);
