@@ -1,0 +1,6 @@
+<resources>
+    <declare-styleable name="TileView">
+        <attr name="textSize" format="dimension"/>
+        <attr name="textColor" format="color"/>
+    </declare-styleable>
+</resources>
