@@ -2,27 +2,21 @@ package com.sergepogosyan.shishnashki;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
-import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.graphics.drawable.ShapeDrawable;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Stack;
 
 /**
  * Tile View - view that contains game tiles
@@ -31,8 +25,12 @@ public class TileView extends View {
   private int mTextColor = Color.RED;
   private float mTextSize = 0;
   private RectF mBounds;
-  private float mLeftPad, mTopPad, mTileWidth, mTileHeight, mTileMargin;
+  private float mLeftPad, mTopPad, mTileWidth, mTileHeight;
+  private float mTileMarginRatio = 5;
+  private float mButtonSizeRatio = 2.5f;
+  private int mTileCount = 4;
   private ArrayList<Tile> mTiles;
+  private ArrayList<RotateButton> mButtons;
 
   private TextPaint mTextPaint;
   private float mTextWidth;
@@ -72,11 +70,12 @@ public class TileView extends View {
     mTextPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
     mTextPaint.setTextAlign(Paint.Align.CENTER);
 
-    invalidateTextPaintAndMeasurements();
+    initTextMeasurements();
     initTiles();
+    initButtons();
   }
 
-  private void invalidateTextPaintAndMeasurements() {
+  private void initTextMeasurements() {
     mTextPaint.setTextSize(mTextSize);
     mTextPaint.setColor(mTextColor);
     mTextWidth = mTextPaint.measureText("2");
@@ -85,9 +84,19 @@ public class TileView extends View {
     mTextHeight = fontMetrics.bottom;
   }
 
+  private void initButtons() {
+    mButtons = new ArrayList<>();
+    for (int i = 0; i < ((mTileCount - 1) * (mTileCount - 1)); i++) {
+      mButtons.add(new RotateButton(i, this));
+    }
+  }
+
   private void initTiles() {
     mTiles = new ArrayList<>();
-    ArrayList<Integer> nums = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16));
+    ArrayList<Integer> nums = new ArrayList<>();
+    for (int i = 0; i < (mTileCount * mTileCount); i++) {
+      nums.add(i + 1);
+    }
     Collections.shuffle(nums);
     for (int index : nums) {
       mTiles.add(new Tile(index, this));
@@ -107,25 +116,48 @@ public class TileView extends View {
     float ww = (float) w - xpad;
     float hh = (float) h - ypad;
 
-    mTileMargin = ww / 4 / 5;
+    float tileMargin = ww / mTileCount / mTileMarginRatio;
     mBounds = new RectF(0, 0, ww, hh);
-    mTileWidth = (mBounds.width() - (mTileMargin * 3)) /4f;
-    mTileHeight = (mBounds.height() - (mTileMargin * 3))/4f;
+    mTileWidth = (mBounds.width() - (tileMargin * (mTileCount - 1))) / mTileCount;
+    mTileHeight = (mBounds.height() - (tileMargin * mTileCount - 1))/ mTileCount;
 
-    for (Tile tile : mTiles) {
-      tile.setWidth(0);
-      tile.setHeight(0);
+    //tiles
+    float tilePlaceW = ww / mTileCount;
+    float tilePlaceH = hh / mTileCount;
+    for (int i = 0; i < mTileCount; i++) {
+      for (int j = 0; j < mTileCount; j++) {
+        Tile tile = mTiles.get((i * mTileCount) + j);
+        tile.setWidth(0);
+        tile.setHeight(0);
+        float x = mLeftPad + (tilePlaceW * j) + (tilePlaceW / 2);
+        float y = mTopPad + (tilePlaceH * i) + (tilePlaceH / 2);
+        tile.setX(x);
+        tile.setY(y);
+      }
     }
-//    onDataChanged();
+
+    //buttons
+    int buttonCount = mTileCount - 1;
+    for (int i = 0; i < buttonCount; i++) {
+      for (int j = 0; j < buttonCount; j++) {
+        RotateButton button = mButtons.get((i * buttonCount) + j);
+        button.setSize(0);
+        float x = mLeftPad + tilePlaceW + (tilePlaceW * j);
+        float y = mTopPad + tilePlaceH + (tilePlaceH * i);
+        button.setX(x);
+        button.setY(y);
+      }
+    }
+
     startAnimation();
   }
 
   private void startAnimation() {
-    List<Animator> animators = new ArrayList<>();
+    List<Animator> tileAnimators = new ArrayList<>();
     for (int i = 0; i < mTiles.size(); i++) {
       Tile tile = mTiles.get(i);
-      ObjectAnimator zoomInX = ObjectAnimator.ofFloat(tile, "width", mTileWidth / 5f, mTileWidth);
-      ObjectAnimator zoomInY = ObjectAnimator.ofFloat(tile, "height", mTileHeight / 5f, mTileHeight);
+      ObjectAnimator zoomInX = ObjectAnimator.ofFloat(tile, "width", 0, mTileWidth);
+      ObjectAnimator zoomInY = ObjectAnimator.ofFloat(tile, "height", 0, mTileHeight);
       zoomInX.setDuration(400);
       zoomInY.setDuration(400);
       zoomInX.setInterpolator(new OvershootInterpolator());
@@ -133,11 +165,23 @@ public class TileView extends View {
       AnimatorSet zoomIn = new AnimatorSet();
       zoomIn.playTogether(zoomInX, zoomInY);
       zoomIn.setStartDelay( i * 50);
-      animators.add(zoomIn);
+      tileAnimators.add(zoomIn);
     }
 
+    List<Animator> buttonAnimators = new ArrayList<>();
+    for (int i = 0; i < mButtons.size(); i++) {
+      RotateButton button = mButtons.get(i);
+      ObjectAnimator zoomInX = ObjectAnimator.ofFloat(button, "size", 0, (mTileWidth / mButtonSizeRatio));
+      zoomInX.setDuration(400);
+      zoomInX.setInterpolator(new OvershootInterpolator());
+      buttonAnimators.add(zoomInX);
+    }
+    AnimatorSet tileAnimatorSet = new AnimatorSet();
+    AnimatorSet buttonAnimatorSet = new AnimatorSet();
+    buttonAnimatorSet.playTogether(buttonAnimators);
+    tileAnimatorSet.playTogether(tileAnimators);
     AnimatorSet animatorSet = new AnimatorSet();
-    animatorSet.playTogether(animators);
+    animatorSet.play(tileAnimatorSet).before(buttonAnimatorSet);
     animatorSet.start();
 
 //    ValueAnimator colorAnim = ObjectAnimator.ofInt(this, "backgroundColor", 0xffFF8080, 0xff8080FF);
@@ -152,23 +196,29 @@ public class TileView extends View {
   protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
 
-    float tileWidth = mBounds.width() / 4;
-    float tileHeight = mBounds.height() / 4;
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        Tile tile = mTiles.get((i * 4) + j);
-        canvas.save();
-        float xOffset = mLeftPad + (tileWidth * j) + ((tileWidth / 2) - (tile.getWidth() / 2));
-        float yOffset = mTopPad + (tileHeight * i) + ((tileHeight / 2) - (tile.getHeight() / 2));
-        canvas.translate(xOffset, yOffset);
-        tile.getShape().draw(canvas);
+    for (Tile tile : mTiles) {
+      float xOffset = tile.getX() - tile.getWidth() / 2;
+      float yOffset = tile.getY() - tile.getHeight() / 2;
+      canvas.save();
+      canvas.translate(xOffset, yOffset);
+      tile.getDrawable().draw(canvas);
 
-        canvas.drawText(String.valueOf(tile.getNumber()),
-            mTileWidth / 2,
-            (mTileHeight + mTextHeight) / 1.7f,
-            mTextPaint);
-        canvas.restore();
-      }
+      canvas.drawText(String.valueOf(tile.getNumber()),
+          mTileWidth / 2,
+          (mTileHeight + mTextHeight) / 1.7f,
+          mTextPaint);
+
+      canvas.restore();
+    }
+
+    for (RotateButton button :
+        mButtons) {
+      float xOffset = button.getX() - button.getSize() / 2;
+      float yOffset = button.getY() - button.getSize() / 2;
+      canvas.save();
+      canvas.translate(xOffset, yOffset);
+      button.getDrawable().draw(canvas);
+      canvas.restore();
     }
   }
 
@@ -189,7 +239,7 @@ public class TileView extends View {
    */
   public void setTextColor(int exampleColor) {
     mTextColor = exampleColor;
-//    invalidateTextPaintAndMeasurements();
+//    initTextMeasurements();
   }
 
   /**
@@ -209,6 +259,6 @@ public class TileView extends View {
    */
   public void setTextSize(float exampleDimension) {
     mTextSize = exampleDimension;
-//    invalidateTextPaintAndMeasurements();
+//    initTextMeasurements();
   }
 }
