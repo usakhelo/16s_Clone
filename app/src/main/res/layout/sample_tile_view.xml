@@ -7,12 +7,12 @@
     <com.sergepogosyan.shishnashki.TileView
         android:layout_width="match_parent"
         android:layout_height="350dp"
-        android:background="#222"
+        android:background="#FFF"
         android:paddingTop="20dp"
         android:paddingBottom="20dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        app:textColor="#33b5e5"
+        app:textColor="#FFF"
         app:textSize="36sp"
         />
 

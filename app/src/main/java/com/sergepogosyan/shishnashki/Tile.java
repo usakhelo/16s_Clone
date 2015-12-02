@@ -1,48 +1,55 @@
 package com.sergepogosyan.shishnashki;
 
 import android.graphics.Paint;
+import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.RadialGradient;
+import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
 import android.graphics.drawable.shapes.Shape;
+import android.util.Size;
+import android.util.SizeF;
 import android.view.View;
 
 public class Tile {
-  private float x = 0, y = 0;
+  private PointF size;
+  private PointF position;
+  private Paint paint;
+
   private int color;
-  private Paint mPaint;
   private View mView;
   private ShapeDrawable mShape;
-
   private int mNumber;
+
+  public PointF getPosition() {
+    return position;
+  }
 
   public int getNumber() {
     return mNumber;
   }
 
   public Paint getPaint() {
-    return mPaint;
+    return paint;
+  }
+  public void setPosition(PointF position) {
+    this.position = position;
+    mView.postInvalidate();
+  }
+  public PointF getSize() {
+    return size;
+  }
+  public void setSize(PointF size) {
+    this.size = size;
+    Shape s = mShape.getShape();
+    s.resize(size.x, size.y);
+    mView.postInvalidate();
   }
 
-  public void setPaint(Paint value) {
-    mPaint = value;
-  }
   public ShapeDrawable getDrawable() {
     return mShape;
-  }
-
-  public void setX(float value) {
-    x = value;
-  }
-  public float getX() {
-    return x;
-  }
-  public void setY(float value) {
-    y = value;
-  }
-  public float getY() {
-    return y;
   }
 
   public int getColor() {
@@ -80,7 +87,7 @@ public class Tile {
     int green = (int)(Math.random() * 255);
     int blue = (int)(Math.random() * 255);
     int color = 0xff000000 | red << 16 | green << 8 | blue;
-    Paint paint = mShape.getPaint();
+    paint = mShape.getPaint();
     paint.setFlags(Paint.ANTI_ALIAS_FLAG);
 //    int darkColor = 0xff000000 | red/4 << 16 | green/4 << 8 | blue/4;
 //    RadialGradient gradient = new RadialGradient(37.5f, 12.5f, 50f, color, darkColor, Shader.TileMode.CLAMP);

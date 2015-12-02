@@ -9,21 +9,18 @@ import android.view.View;
 public class RotateButton {
   private float x = 0, y = 0;
 
-  private Paint mPaint;
   private View mView;
   private ShapeDrawable mShape;
 
-  private int mNumber;
+  private int mCol, mRow;
 
-  public int getNumber() {
-    return mNumber;
+  public int getCol() {
+    return mCol;
   }
-  public Paint getPaint() {
-    return mPaint;
+  public int getRow() {
+    return mRow;
   }
-  public void setPaint(Paint value) {
-    mPaint = value;
-  }
+
   public ShapeDrawable getDrawable() {
     return mShape;
   }
@@ -49,8 +46,9 @@ public class RotateButton {
     mView.postInvalidate();
   }
 
-  public RotateButton(int num, View view) {
-    mNumber = num;
+  public RotateButton(int col, int row, View view) {
+    mCol = col;
+    mRow = row;
     mView = view;
     OvalShape shape = new OvalShape();
     mShape = new ShapeDrawable(shape);
