@@ -116,7 +116,7 @@ public class TileView extends View {
     for (int i = 0; i < (mTileCount * mTileCount); i++) {
       nums.add(i + 1);
     }
-    Collections.shuffle(nums);
+//    Collections.shuffle(nums);
     for (int index : nums) {
       mTiles.add(new Tile(index, this));
     }
