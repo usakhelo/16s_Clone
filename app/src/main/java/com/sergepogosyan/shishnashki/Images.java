@@ -1,6 +1,11 @@
 package com.sergepogosyan.shishnashki;
 
 public class Images {
+  public final static int[] buttons = new int[]{
+      R.drawable.button_cw,
+      R.drawable.button_ccw,
+  };
+
   public final static int[] tiles_set = new int[]{
       R.drawable.tile_set_01,
       R.drawable.tile_set_02,
@@ -37,4 +42,8 @@ public class Images {
       R.drawable.tile_unset_15,
       R.drawable.tile_unset_16,
   };
-}
+  public final static int[][] tiles = new int[][]{
+      tiles_unset,
+      tiles_set,
+  };
+  }

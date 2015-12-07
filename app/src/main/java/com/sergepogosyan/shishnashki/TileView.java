@@ -5,11 +5,14 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.text.TextPaint;
 import android.util.AttributeSet;
@@ -24,32 +27,27 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Tile View - view that contains game tiles
- */
 public class TileView extends View {
   private int mTextColor = Color.RED;
   private float mTextSize = 0;
-  private RectF mBounds;
-  private float mLeftPad, mTopPad, mTileWidth, mTileHeight;
-  private float mTileMarginRatio = 5f;
-  private float mButtonSizeRatio = 2f;
+  private Rect mBounds;
+  private int mLeftPad, mTopPad, mTileWidth, mTileHeight;
+  private int mTileMarginRatio = 15;
+  private int mButtonSizeRatio = 2;
   private int mTileCount = 4;
+  private float mRotAngle = 0f;
   private ArrayList<Tile> mTiles;
   private ArrayList<RotateButton> mButtons;
 
   private AnimatorSet moveAnimatorSet, startAnimatorSet, clickAnimator;
 
-  private TextPaint mTextPaint;
-  private float mTextWidth;
-  private float mTextHeight;
-
   class PointEvaluator implements TypeEvaluator {
     public Object evaluate(float fraction, Object startValue, Object endValue) {
-      PointF startPoint = (PointF) startValue;
-      PointF endPoint = (PointF) endValue;
-      return new PointF(startPoint.x + fraction * (endPoint.x - startPoint.x),
-          startPoint.y + fraction * (endPoint.y - startPoint.y));
+      Point startPoint = (Point) startValue;
+      Point endPoint = (Point) endValue;
+      float x = startPoint.x + fraction * (endPoint.x - startPoint.x);
+      float y = startPoint.y + fraction * (endPoint.y - startPoint.y);
+      return new Point((int)x, (int)y);
     }
   }
 
@@ -83,22 +81,8 @@ public class TileView extends View {
 
     a.recycle();
 
-    mTextPaint = new TextPaint();
-    mTextPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-    mTextPaint.setTextAlign(Paint.Align.CENTER);
-
-    initTextMeasurements();
     initTiles();
     initButtons();
-  }
-
-  private void initTextMeasurements() {
-    mTextPaint.setTextSize(mTextSize);
-    mTextPaint.setColor(mTextColor);
-    mTextWidth = mTextPaint.measureText("2");
-
-    Paint.FontMetrics fontMetrics = mTextPaint.getFontMetrics();
-    mTextHeight = fontMetrics.bottom;
   }
 
   private void initButtons() {
@@ -123,34 +107,45 @@ public class TileView extends View {
   }
 
   @Override
+  protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    int w = MeasureSpec.getSize(widthMeasureSpec);
+    int h = MeasureSpec.getSize(heightMeasureSpec);
+    Configuration config = getResources().getConfiguration();
+    if (config.orientation == Configuration.ORIENTATION_LANDSCAPE)
+      setMeasuredDimension(h, h);
+    else
+      setMeasuredDimension(w, w);
+    Log.i("shishanshki: ", "onMeasure: " + w + ", " + h);
+  }
+
+  @Override
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     super.onSizeChanged(w, h, oldw, oldh);
 
     // Account for padding
     mLeftPad = getPaddingLeft();
     mTopPad = getPaddingTop();
-    float xpad = mLeftPad + getPaddingRight();
-    float ypad = mTopPad + getPaddingBottom();
+    int xPad = mLeftPad + getPaddingRight();
+    int yPad = mTopPad + getPaddingBottom();
 
-    float ww = (float) w - xpad;
-    float hh = (float) h - ypad;
+    int ww = w - xPad;
+    int hh = h - yPad;
 
-    float tileMargin = ww / mTileCount / mTileMarginRatio;
-    mBounds = new RectF(0, 0, ww, hh);
+    int tileMargin = ww / mTileCount / mTileMarginRatio;
+    mBounds = new Rect(0, 0, ww, hh);
     mTileWidth = (mBounds.width() - (tileMargin * (mTileCount - 1))) / mTileCount;
     mTileHeight = (mBounds.height() - (tileMargin * mTileCount - 1))/ mTileCount;
 
     //tiles
-    float tilePlaceW = ww / mTileCount;
-    float tilePlaceH = hh / mTileCount;
+    int tilePlaceW = ww / mTileCount;
+    int tilePlaceH = hh / mTileCount;
     for (int i = 0; i < mTileCount; i++) {
       for (int j = 0; j < mTileCount; j++) {
         Tile tile = mTiles.get((i * mTileCount) + j);
-        tile.setWidth(0);
-        tile.setHeight(0);
-        float x = mLeftPad + (tilePlaceW * j) + (tilePlaceW / 2);
-        float y = mTopPad + (tilePlaceH * i) + (tilePlaceH / 2);
-        tile.setPosition(new PointF(x, y));
+        tile.setSize(0);
+        int x = mLeftPad + (tilePlaceW * j) + (tilePlaceW / 2);
+        int y = mTopPad + (tilePlaceH * i) + (tilePlaceH / 2);
+        tile.setPosition(new Point(x, y));
       }
     }
 
@@ -160,10 +155,9 @@ public class TileView extends View {
       for (int j = 0; j < buttonCount; j++) {
         RotateButton button = mButtons.get((i * buttonCount) + j);
         button.setSize(0);
-        float x = mLeftPad + tilePlaceW + (tilePlaceW * j);
-        float y = mTopPad + tilePlaceH + (tilePlaceH * i);
-        button.setX(x);
-        button.setY(y);
+        int x = mLeftPad + tilePlaceW + (tilePlaceW * j);
+        int y = mTopPad + tilePlaceH + (tilePlaceH * i);
+        button.setPosition(new Point(x, y));
       }
     }
 
@@ -174,25 +168,20 @@ public class TileView extends View {
     List<Animator> tileAnimators = new ArrayList<>();
     for (int i = 0; i < mTiles.size(); i++) {
       Tile tile = mTiles.get(i);
-      ObjectAnimator zoomInX = ObjectAnimator.ofFloat(tile, "width", 0, mTileWidth);
-      ObjectAnimator zoomInY = ObjectAnimator.ofFloat(tile, "height", 0, mTileHeight);
+      ObjectAnimator zoomInX = ObjectAnimator.ofInt(tile, "size", 0, mTileWidth);
       zoomInX.setDuration(400);
-      zoomInY.setDuration(400);
       zoomInX.setInterpolator(new OvershootInterpolator());
-      zoomInY.setInterpolator(new OvershootInterpolator());
-      AnimatorSet zoomIn = new AnimatorSet();
-      zoomIn.playTogether(zoomInX, zoomInY);
-      zoomIn.setStartDelay( i * 50);
-      tileAnimators.add(zoomIn);
+      zoomInX.setStartDelay( i * 50);
+      tileAnimators.add(zoomInX);
     }
 
     List<Animator> buttonAnimators = new ArrayList<>();
     for (int i = 0; i < mButtons.size(); i++) {
       RotateButton button = mButtons.get(i);
-      ObjectAnimator zoomInX = ObjectAnimator.ofFloat(button, "size", 0, (mTileWidth / mButtonSizeRatio));
-      zoomInX.setDuration(400);
-      zoomInX.setInterpolator(new OvershootInterpolator());
-      buttonAnimators.add(zoomInX);
+      ObjectAnimator buttonPopOut = ObjectAnimator.ofFloat(button, "size", 0, (mTileWidth / mButtonSizeRatio));
+      buttonPopOut.setDuration(400);
+      buttonPopOut.setInterpolator(new OvershootInterpolator());
+      buttonAnimators.add(buttonPopOut);
     }
     AnimatorSet tileAnimatorSet = new AnimatorSet();
     AnimatorSet buttonAnimatorSet = new AnimatorSet();
@@ -231,15 +220,15 @@ public class TileView extends View {
     RotateButton pressedButton = null;
     for (RotateButton button :
         mButtons) {
-      float butX = button.getX();
-      float butY = button.getY();
+      float butX = button.getPosition().x;
+      float butY = button.getPosition().y;
       double squareDistance = Math.pow(butX - x, 2) + Math.pow(butY - y, 2);
       if (squareDistance <= Math.pow(button.getSize() / 2f, 2) ) {
 
         pressedButton = button;
         Log.i("shishnashki", "button clicked: " + button.getCol());
 
-        float butSize = (mTileWidth / mButtonSizeRatio);//button.getSize();
+        float butSize = (mTileWidth / mButtonSizeRatio);
         ObjectAnimator zoomIn = ObjectAnimator.ofFloat(button, "size", butSize, butSize * .7f);
         ObjectAnimator zoomOut = ObjectAnimator.ofFloat(button, "size", butSize * .7f, butSize);
         zoomIn.setDuration(100);
@@ -247,9 +236,8 @@ public class TileView extends View {
         zoomIn.setInterpolator(new DecelerateInterpolator());
         zoomOut.setInterpolator(new DecelerateInterpolator());
         clickAnimator = new AnimatorSet();
-        clickAnimator.playSequentially(zoomIn, zoomOut);//play(zoomIn).before(zoomOut);
+        clickAnimator.playSequentially(zoomIn, zoomOut);
         clickAnimator.start();
-//        break;
       }
     }
 
@@ -263,8 +251,8 @@ public class TileView extends View {
       //arrange tiles animation in tileNums. New places: 0->1, 1->3, 2->0, 3->2
       List<Animator> moveAnimators = new ArrayList<>();
       for (int i = 0; i < 4; i++) {
-        PointF from = mTiles.get(tileNumsSrc[i]).getPosition();
-        PointF to = mTiles.get(tileNumsTrg[i]).getPosition();
+        Point from = mTiles.get(tileNumsSrc[i]).getPosition();
+        Point to = mTiles.get(tileNumsTrg[i]).getPosition();
         ObjectAnimator mover = ObjectAnimator.ofObject(mTiles.get(tileNumsSrc[i]), "position", new PointEvaluator(), from, to);
         mover.setDuration(300);
 
@@ -284,7 +272,6 @@ public class TileView extends View {
       mTiles.set(tileNumsTrg[1], mTiles.get(tileNumsSrc[1]));
       mTiles.set(tileNumsTrg[0], temp);
 
-
       moveAnimatorSet = new AnimatorSet();
       moveAnimatorSet.playTogether(moveAnimators);
       moveAnimatorSet.start();
@@ -297,35 +284,22 @@ public class TileView extends View {
     super.onDraw(canvas);
 
     for (Tile tile : mTiles) {
-      float xOffset = tile.getPosition().x - tile.getWidth() / 2;
-      float yOffset = tile.getPosition().y - tile.getHeight() / 2;
+      float xOffset = tile.getPosition().x - tile.getSize() / 2;
+      float yOffset = tile.getPosition().y - tile.getSize() / 2;
       canvas.save();
       canvas.translate(xOffset, yOffset);
-      if (mTiles.indexOf(tile) + 1 == tile.getNumber()){
-        Paint paint = tile.getPaint();
-        int darkColor = 0xff72d9d7;
-        paint.setColor(darkColor);
-      } else {
-        Paint paint = tile.getPaint();
-        int darkColor = 0xffffa35f;
-        paint.setColor(darkColor);
-      }
+      tile.setTile(mTiles.indexOf(tile) + 1 == tile.getNumber());
       tile.getDrawable().draw(canvas);
-
-      canvas.drawText(String.valueOf(tile.getNumber()),
-          mTileWidth / 2,
-          (mTileHeight + mTextHeight) / 1.7f,
-          mTextPaint);
-
       canvas.restore();
     }
 
     for (RotateButton button :
         mButtons) {
-      float xOffset = button.getX() - button.getSize() / 2;
-      float yOffset = button.getY() - button.getSize() / 2;
+      float xOffset = button.getPosition().x - button.getSize() / 2;
+      float yOffset = button.getPosition().y - button.getSize() / 2;
       canvas.save();
       canvas.translate(xOffset, yOffset);
+//      canvas.rotate(mRotAngle++);
       button.getDrawable().draw(canvas);
       canvas.restore();
     }

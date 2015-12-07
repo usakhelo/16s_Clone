@@ -1,98 +1,51 @@
 package com.sergepogosyan.shishnashki;
 
-import android.graphics.Paint;
 import android.graphics.Point;
-import android.graphics.PointF;
-import android.graphics.RadialGradient;
 import android.graphics.Rect;
-import android.graphics.Shader;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RoundRectShape;
-import android.graphics.drawable.shapes.Shape;
-import android.util.Size;
-import android.util.SizeF;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 
 public class Tile {
-  private PointF size;
-  private PointF position;
-  private Paint paint;
-
-  private int color;
+  private Point mPosition;
+  private int mTileSet;
   private View mView;
-  private ShapeDrawable mShape;
+  private BitmapDrawable mBitmap;
   private int mNumber;
-
-  public PointF getPosition() {
-    return position;
-  }
 
   public int getNumber() {
     return mNumber;
   }
 
-  public Paint getPaint() {
-    return paint;
+  public Point getPosition() {
+    return mPosition;
   }
-  public void setPosition(PointF position) {
-    this.position = position;
+  public void setPosition(Point position) {
+    this.mPosition = position;
     mView.postInvalidate();
   }
-  public PointF getSize() {
-    return size;
+  public int getSize() {
+    return mBitmap.getBounds().width();
   }
-  public void setSize(PointF size) {
-    this.size = size;
-    Shape s = mShape.getShape();
-    s.resize(size.x, size.y);
-    mView.postInvalidate();
-  }
-
-  public ShapeDrawable getDrawable() {
-    return mShape;
-  }
-
-  public int getColor() {
-    return color;
-  }
-  public void setColor(int value) {
-    color = value;
-  }
-
-  public float getWidth() {
-    return mShape.getShape().getWidth();
-  }
-  public void setWidth(float width) {
-    Shape s = mShape.getShape();
-    s.resize(width, s.getHeight());
+  public void setSize(int size) {
+    mBitmap.setBounds(0, 0, size, size);
     mView.postInvalidate();
   }
 
-  public float getHeight() {
-    return mShape.getShape().getHeight();
+  public Drawable getDrawable() {
+    return mBitmap;
   }
-  public void setHeight(float height) {
-    Shape s = mShape.getShape();
-    s.resize(s.getWidth(), height);
-    mView.postInvalidate();
+
+  public void setTile(boolean set) {
+    mTileSet = set ? 1 : 0;
+    Rect size = mBitmap.getBounds();
+    mBitmap = (BitmapDrawable) mView.getResources().getDrawable(Images.tiles[mTileSet][mNumber-1]);
+    mBitmap.setBounds(0, 0, size.width(), size.height());
   }
 
   public Tile(int num, View view) {
     mNumber = num;
     mView = view;
-    float rad = 8f;
-    RoundRectShape shape = new RoundRectShape(new float[] {rad, rad, rad, rad, rad, rad, rad, rad, rad}, null, null);
-    mShape = new ShapeDrawable(shape);
-    int red = (int)(Math.random() * 255);
-    int green = (int)(Math.random() * 255);
-    int blue = (int)(Math.random() * 255);
-    int color = 0xff000000 | red << 16 | green << 8 | blue;
-    paint = mShape.getPaint();
-    paint.setFlags(Paint.ANTI_ALIAS_FLAG);
-//    int darkColor = 0xff000000 | red/4 << 16 | green/4 << 8 | blue/4;
-//    RadialGradient gradient = new RadialGradient(37.5f, 12.5f, 50f, color, darkColor, Shader.TileMode.CLAMP);
-//    paint.setShader(gradient);
-    paint.setColor(color);
-    paint.setStyle(Paint.Style.FILL);
+    mBitmap = (BitmapDrawable) mView.getResources().getDrawable(Images.tiles[mTileSet][mNumber-1]);
   }
 }

@@ -1,16 +1,15 @@
 package com.sergepogosyan.shishnashki;
 
-import android.graphics.Paint;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
-import android.graphics.drawable.shapes.Shape;
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 
 public class RotateButton {
-  private float x = 0, y = 0;
+  private Point mPosition;
 
   private View mView;
-  private ShapeDrawable mShape;
+  private BitmapDrawable mBitmap;
 
   private int mCol, mRow;
 
@@ -21,28 +20,23 @@ public class RotateButton {
     return mRow;
   }
 
-  public ShapeDrawable getDrawable() {
-    return mShape;
+  public Drawable getDrawable() {
+    return mBitmap;
   }
-  public void setX(float value) {
-    x = value;
+
+  public Point getPosition() {
+    return mPosition;
   }
-  public float getX() {
-    return x;
-  }
-  public void setY(float value) {
-    y = value;
-  }
-  public float getY() {
-    return y;
+  public void setPosition(Point position) {
+    this.mPosition = position;
   }
 
   public float getSize() {
-    return mShape.getShape().getWidth();
+    return mBitmap.getBounds().width();
   }
+
   public void setSize(float size) {
-    Shape s = mShape.getShape();
-    s.resize(size, size);
+    mBitmap.setBounds(0, 0, (int)size, (int)size);
     mView.postInvalidate();
   }
 
@@ -50,15 +44,6 @@ public class RotateButton {
     mCol = col;
     mRow = row;
     mView = view;
-    OvalShape shape = new OvalShape();
-    mShape = new ShapeDrawable(shape);
-    int red = (int)(Math.random() * 255);
-    int green = (int)(Math.random() * 255);
-    int blue = (int)(Math.random() * 255);
-    int color = 0xff000000 | red << 16 | green << 8 | blue;
-    Paint paint = mShape.getPaint();
-    paint.setFlags(Paint.ANTI_ALIAS_FLAG);
-    paint.setColor(color);
-    paint.setStyle(Paint.Style.FILL);
+    mBitmap = (BitmapDrawable) mView.getResources().getDrawable(Images.buttons[0]);
   }
 }
