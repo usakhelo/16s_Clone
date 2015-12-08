@@ -17,6 +17,10 @@ public class Tile {
     return mNumber;
   }
 
+  public void setNumber(int num) {
+    mNumber = num;
+  }
+
   public Point getPosition() {
     return mPosition;
   }

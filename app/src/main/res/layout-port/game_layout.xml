@@ -42,8 +42,7 @@
         android:paddingBottom="10dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        app:textColor="#FFF"
-        app:textSize="36sp"
+        android:id="@+id/game_view"
         />
     <RelativeLayout
         android:layout_width="match_parent"

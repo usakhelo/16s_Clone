@@ -39,8 +39,7 @@
         android:paddingBottom="5dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        app:textColor="#FFF"
-        app:textSize="36sp"
+        android:id="@+id/game_view"
         />
 
     <TextView

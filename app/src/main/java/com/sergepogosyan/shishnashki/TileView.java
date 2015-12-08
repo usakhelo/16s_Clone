@@ -4,17 +4,14 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Point;
-import android.graphics.PointF;
 import android.graphics.Rect;
-import android.graphics.RectF;
-import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -23,19 +20,24 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class TileView extends View {
-  private int mTextColor = Color.RED;
-  private float mTextSize = 0;
+
+  public int getDirection() {
+    return mDirection;
+  }
+
+  public void setDirection(int direction) {
+    this.mDirection = direction;
+  }
+
+  private int mDirection;
   private Rect mBounds;
   private int mLeftPad, mTopPad, mTileWidth, mTileHeight;
   private int mTileMarginRatio = 15;
   private int mButtonSizeRatio = 2;
   private int mTileCount = 4;
-  private float mRotAngle = 0f;
   private ArrayList<Tile> mTiles;
   private ArrayList<RotateButton> mButtons;
 
@@ -70,17 +72,7 @@ public class TileView extends View {
     final TypedArray a = getContext().obtainStyledAttributes(
         attrs, R.styleable.TileView, defStyle, 0);
 
-    mTextColor = a.getColor(
-        R.styleable.TileView_textColor,
-        mTextColor);
-    // Use getDimensionPixelSize or getDimensionPixelOffset when dealing with
-    // values that should fall on pixel boundaries.
-    mTextSize = a.getDimension(
-        R.styleable.TileView_textSize,
-        mTextSize);
-
     a.recycle();
-
     initTiles();
     initButtons();
   }
@@ -94,13 +86,37 @@ public class TileView extends View {
     }
   }
 
-  private void initTiles() {
+  public int[] getTiles() {
+    int[] tileNums = new int[(mTileCount * mTileCount)];
+    for (int i = 0; i < (mTileCount * mTileCount); i++) {
+      tileNums[i] = mTiles.get(i).getNumber();
+    }
+    return tileNums;
+  }
+
+  public void setTiles(int[] tileNums) {
+    for (int i = 0; i < (mTileCount * mTileCount); i++) {
+      mTiles.get(i).setNumber(tileNums[i]);
+    }
+  }
+
+  public void resetTiles() {
+    for (int i = 0; i < (mTileCount * mTileCount); i++) {
+      mTiles.get(i).setNumber(i+1);
+    }
+    //    Collections.shuffle(nums);
+//    startAnimation();
+    invalidate();
+  }
+
+  public void initTiles() {
     mTiles = new ArrayList<>();
     ArrayList<Integer> nums = new ArrayList<>();
+
     for (int i = 0; i < (mTileCount * mTileCount); i++) {
       nums.add(i + 1);
     }
-//    Collections.shuffle(nums);
+
     for (int index : nums) {
       mTiles.add(new Tile(index, this));
     }
@@ -134,7 +150,7 @@ public class TileView extends View {
     int tileMargin = ww / mTileCount / mTileMarginRatio;
     mBounds = new Rect(0, 0, ww, hh);
     mTileWidth = (mBounds.width() - (tileMargin * (mTileCount - 1))) / mTileCount;
-    mTileHeight = (mBounds.height() - (tileMargin * mTileCount - 1))/ mTileCount;
+    mTileHeight = (mBounds.height() - (tileMargin * mTileCount - 1)) / mTileCount;
 
     //tiles
     int tilePlaceW = ww / mTileCount;
@@ -142,7 +158,8 @@ public class TileView extends View {
     for (int i = 0; i < mTileCount; i++) {
       for (int j = 0; j < mTileCount; j++) {
         Tile tile = mTiles.get((i * mTileCount) + j);
-        tile.setSize(0);
+        if (!this.isInEditMode())
+          tile.setSize(0);
         int x = mLeftPad + (tilePlaceW * j) + (tilePlaceW / 2);
         int y = mTopPad + (tilePlaceH * i) + (tilePlaceH / 2);
         tile.setPosition(new Point(x, y));
@@ -154,13 +171,13 @@ public class TileView extends View {
     for (int i = 0; i < buttonCount; i++) {
       for (int j = 0; j < buttonCount; j++) {
         RotateButton button = mButtons.get((i * buttonCount) + j);
-        button.setSize(0);
+        if (!this.isInEditMode())
+          button.setSize(0);
         int x = mLeftPad + tilePlaceW + (tilePlaceW * j);
         int y = mTopPad + tilePlaceH + (tilePlaceH * i);
         button.setPosition(new Point(x, y));
       }
     }
-
     startAnimation();
   }
 
@@ -244,16 +261,15 @@ public class TileView extends View {
     if (pressedButton != null) {
       int col = pressedButton.getCol();
       int row = pressedButton.getRow();
-      int[] tileNumsSrc = {(row * 4) + col, (row * 4) + col + 1, ((row + 1) * 4) + col, ((row + 1) * 4) + col + 1};
-      int[] tileNumsTrg = {tileNumsSrc[1], tileNumsSrc[3], tileNumsSrc[0], tileNumsSrc[2]};
-      Log.i("shishnashki", "button clicked2: " + (Arrays.asList(tileNumsTrg)).toString());
+      int[] tileNumSrc = {(row * 4) + col, (row * 4) + col + 1, ((row + 1) * 4) + col, ((row + 1) * 4) + col + 1};
+      int[] tileNumTrg;
+      tileNumTrg = mDirection == 0 ? rotateCW(tileNumSrc) : rotateCCW(tileNumSrc);
 
-      //arrange tiles animation in tileNums. New places: 0->1, 1->3, 2->0, 3->2
       List<Animator> moveAnimators = new ArrayList<>();
       for (int i = 0; i < 4; i++) {
-        Point from = mTiles.get(tileNumsSrc[i]).getPosition();
-        Point to = mTiles.get(tileNumsTrg[i]).getPosition();
-        ObjectAnimator mover = ObjectAnimator.ofObject(mTiles.get(tileNumsSrc[i]), "position", new PointEvaluator(), from, to);
+        Point from = mTiles.get(tileNumSrc[i]).getPosition();
+        Point to = mTiles.get(tileNumTrg[i]).getPosition();
+        ObjectAnimator mover = ObjectAnimator.ofObject(mTiles.get(tileNumSrc[i]), "position", new PointEvaluator(), from, to);
         mover.setDuration(300);
 
         AnimatorSet move = new AnimatorSet();
@@ -261,22 +277,32 @@ public class TileView extends View {
         moveAnimators.add(move);
       }
 
-      Log.i("shishnashki", "move: " + mTiles.toString());
-
-      //swap tiles in main list
-      //arrange tiles animation in tileNums. New places (src -> target): 0->1, 1->3, 2->0, 3->2
-
-      Tile temp = mTiles.get(tileNumsTrg[2]);
-      mTiles.set(tileNumsTrg[2], mTiles.get(tileNumsSrc[2]));
-      mTiles.set(tileNumsTrg[3], mTiles.get(tileNumsSrc[3]));
-      mTiles.set(tileNumsTrg[1], mTiles.get(tileNumsSrc[1]));
-      mTiles.set(tileNumsTrg[0], temp);
-
       moveAnimatorSet = new AnimatorSet();
       moveAnimatorSet.playTogether(moveAnimators);
       moveAnimatorSet.start();
     }
     return true;
+  }
+
+  private int[] rotateCW(int[] tileNumsSrc) {
+    //New places (src -> target): 0->1, 1->3, 3->2, 2->0
+    int[] tileNumTrg = {tileNumsSrc[1], tileNumsSrc[3], tileNumsSrc[0], tileNumsSrc[2]};
+    Tile temp = mTiles.get(tileNumsSrc[0]);
+    mTiles.set(tileNumsSrc[0], mTiles.get(tileNumsSrc[2]));
+    mTiles.set(tileNumsSrc[2], mTiles.get(tileNumsSrc[3]));
+    mTiles.set(tileNumsSrc[3], mTiles.get(tileNumsSrc[1]));
+    mTiles.set(tileNumsSrc[1], temp);
+    return tileNumTrg;
+  }
+  private int[] rotateCCW(int[] tileNumsSrc) {
+    //New places (src -> target): 0->2, 2->3, 3->1, 1->0
+    int[] tileNumTrg = {tileNumsSrc[2], tileNumsSrc[0], tileNumsSrc[3], tileNumsSrc[1]};
+    Tile temp = mTiles.get(tileNumsSrc[0]);
+    mTiles.set(tileNumsSrc[0], mTiles.get(tileNumsSrc[1]));
+    mTiles.set(tileNumsSrc[1], mTiles.get(tileNumsSrc[3]));
+    mTiles.set(tileNumsSrc[3], mTiles.get(tileNumsSrc[2]));
+    mTiles.set(tileNumsSrc[2], temp);
+    return tileNumTrg;
   }
 
   @Override
@@ -303,45 +329,5 @@ public class TileView extends View {
       button.getDrawable().draw(canvas);
       canvas.restore();
     }
-  }
-
-  /**
-   * Gets the color attribute value.
-   *
-   * @return The color attribute value.
-   */
-  public int getTextColor() {
-    return mTextColor;
-  }
-
-  /**
-   * Sets the view's example color attribute value. In the example view, this color
-   * is the font color.
-   *
-   * @param exampleColor The example color attribute value to use.
-   */
-  public void setTextColor(int exampleColor) {
-    mTextColor = exampleColor;
-//    initTextMeasurements();
-  }
-
-  /**
-   * Gets the example dimension attribute value.
-   *
-   * @return The example dimension attribute value.
-   */
-  public float getTextSize() {
-    return mTextSize;
-  }
-
-  /**
-   * Sets the view's example dimension attribute value. In the example view, this dimension
-   * is the font size.
-   *
-   * @param exampleDimension The example dimension attribute value to use.
-   */
-  public void setTextSize(float exampleDimension) {
-    mTextSize = exampleDimension;
-//    initTextMeasurements();
   }
 }
