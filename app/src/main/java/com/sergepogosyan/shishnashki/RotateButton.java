@@ -8,6 +8,8 @@ import android.view.View;
 public class RotateButton {
   private Point mPosition;
 
+  private float mRotation;
+
   private View mView;
   private BitmapDrawable mBitmap;
 
@@ -38,6 +40,14 @@ public class RotateButton {
   public void setSize(float size) {
     mBitmap.setBounds(0, 0, (int)size, (int)size);
     mView.postInvalidate();
+  }
+
+  public float getRotation() {
+    return mRotation;
+  }
+
+  public void setRotation(float rotation) {
+    this.mRotation = rotation;
   }
 
   public RotateButton(int col, int row, View view) {

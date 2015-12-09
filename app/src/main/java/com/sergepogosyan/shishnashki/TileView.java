@@ -1,25 +1,26 @@
 package com.sergepogosyan.shishnashki;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class TileView extends View {
@@ -101,12 +102,38 @@ public class TileView extends View {
   }
 
   public void resetTiles() {
-    for (int i = 0; i < (mTileCount * mTileCount); i++) {
-      mTiles.get(i).setNumber(i+1);
-    }
-    //    Collections.shuffle(nums);
-//    startAnimation();
-    invalidate();
+    Animator hide = hideAnimation();
+    hide.addListener(new AnimatorListenerAdapter() {
+      @Override
+      public void onAnimationEnd(Animator animation) {
+        super.onAnimationEnd(animation);
+        for (int i = 0; i < (mTileCount * mTileCount); i++) {
+          mTiles.get(i).setNumber(i+1);
+        }
+        startAnimation();
+      }
+    });
+    hide.start();
+  }
+  public void shuffleTiles() {
+    Animator hide = hideAnimation();
+    hide.addListener(new AnimatorListenerAdapter() {
+      @Override
+      public void onAnimationEnd(Animator animation) {
+        super.onAnimationEnd(animation);
+        ArrayList<Integer> nums = new ArrayList<>();
+
+        for (int i = 0; i < (mTileCount * mTileCount); i++) {
+          nums.add(i + 1);
+        }
+        Collections.shuffle(nums);
+        for (int i = 0; i < (mTileCount * mTileCount); i++) {
+          mTiles.get(i).setNumber(nums.get(i));
+        }
+        startAnimation();
+      }
+    });
+    hide.start();
   }
 
   public void initTiles() {
@@ -181,6 +208,71 @@ public class TileView extends View {
     startAnimation();
   }
 
+  private Animator hideTilesAnim() {
+    List<Animator> tileAnimators = new ArrayList<>();
+    for (int i = 0; i < mTiles.size(); i++) {
+      Tile tile = mTiles.get(i);
+      ObjectAnimator zoomInX = ObjectAnimator.ofInt(tile, "size", mTileWidth, 0);
+      zoomInX.setDuration(100);
+      zoomInX.setInterpolator(new AccelerateInterpolator());
+      tileAnimators.add(zoomInX);
+    }
+    AnimatorSet tileAnimatorSet = new AnimatorSet();
+    tileAnimatorSet.playTogether(tileAnimators);
+    return tileAnimatorSet;
+  }
+  private Animator hideButtonsAnim() {
+    List<Animator> buttonAnimators = new ArrayList<>();
+    for (int i = 0; i < mButtons.size(); i++) {
+      RotateButton button = mButtons.get(i);
+      ObjectAnimator buttonPopOut = ObjectAnimator.ofFloat(button, "size", (mTileWidth / mButtonSizeRatio), 0);
+      buttonPopOut.setDuration(100);
+      buttonPopOut.setInterpolator(new AccelerateInterpolator());
+      buttonAnimators.add(buttonPopOut);
+    }
+    AnimatorSet animatorSet = new AnimatorSet();
+    animatorSet.playTogether(buttonAnimators);
+    return animatorSet;
+  }
+
+  private Animator hideAnimation() {
+    AnimatorSet tileAnimatorSet = (AnimatorSet)hideTilesAnim();
+    AnimatorSet buttonAnimatorSet = (AnimatorSet)hideButtonsAnim();
+    startAnimatorSet = new AnimatorSet();
+    startAnimatorSet.play(tileAnimatorSet).with(buttonAnimatorSet);
+    return startAnimatorSet;
+  }
+
+  private Animator startTilesAnimation() {
+    List<Animator> tileAnimators = new ArrayList<>();
+    for (int i = 0; i < mTiles.size(); i++) {
+      Tile tile = mTiles.get(i);
+      ObjectAnimator zoomInX = ObjectAnimator.ofInt(tile, "size", 0, mTileWidth);
+      zoomInX.setDuration(400);
+      zoomInX.setInterpolator(new OvershootInterpolator());
+      zoomInX.setStartDelay( i * 50);
+      tileAnimators.add(zoomInX);
+    }
+
+    AnimatorSet tileAnimatorSet = new AnimatorSet();
+    tileAnimatorSet.playTogether(tileAnimators);
+    return tileAnimatorSet;
+  }
+
+  private Animator startButtonsAnimation() {
+    List<Animator> buttonAnimators = new ArrayList<>();
+    for (int i = 0; i < mButtons.size(); i++) {
+      RotateButton button = mButtons.get(i);
+      ObjectAnimator buttonPopOut = ObjectAnimator.ofFloat(button, "size", 0, (mTileWidth / mButtonSizeRatio));
+      buttonPopOut.setDuration(400);
+      buttonPopOut.setInterpolator(new OvershootInterpolator());
+      buttonAnimators.add(buttonPopOut);
+    }
+    AnimatorSet buttonAnimatorSet = new AnimatorSet();
+    buttonAnimatorSet.playTogether(buttonAnimators);
+    return buttonAnimatorSet;
+  }
+
   private void startAnimation() {
     List<Animator> tileAnimators = new ArrayList<>();
     for (int i = 0; i < mTiles.size(); i++) {
@@ -200,10 +292,8 @@ public class TileView extends View {
       buttonPopOut.setInterpolator(new OvershootInterpolator());
       buttonAnimators.add(buttonPopOut);
     }
-    AnimatorSet tileAnimatorSet = new AnimatorSet();
-    AnimatorSet buttonAnimatorSet = new AnimatorSet();
-    buttonAnimatorSet.playTogether(buttonAnimators);
-    tileAnimatorSet.playTogether(tileAnimators);
+    AnimatorSet tileAnimatorSet = (AnimatorSet) startTilesAnimation();
+    AnimatorSet buttonAnimatorSet = (AnimatorSet) startButtonsAnimation();
     startAnimatorSet = new AnimatorSet();
     startAnimatorSet.play(tileAnimatorSet).before(buttonAnimatorSet);
     startAnimatorSet.start();
@@ -243,17 +333,13 @@ public class TileView extends View {
       if (squareDistance <= Math.pow(button.getSize() / 2f, 2) ) {
 
         pressedButton = button;
-        Log.i("shishnashki", "button clicked: " + button.getCol());
 
-        float butSize = (mTileWidth / mButtonSizeRatio);
-        ObjectAnimator zoomIn = ObjectAnimator.ofFloat(button, "size", butSize, butSize * .7f);
-        ObjectAnimator zoomOut = ObjectAnimator.ofFloat(button, "size", butSize * .7f, butSize);
-        zoomIn.setDuration(100);
-        zoomOut.setDuration(200);
-        zoomIn.setInterpolator(new DecelerateInterpolator());
-        zoomOut.setInterpolator(new DecelerateInterpolator());
+        float endRot = mDirection == 0 ? 90f : -90f;
+        ObjectAnimator rotation = ObjectAnimator.ofFloat(button, "rotation", 0, endRot);
+        rotation.setDuration(300);
+        rotation.setInterpolator(new DecelerateInterpolator());
         clickAnimator = new AnimatorSet();
-        clickAnimator.playSequentially(zoomIn, zoomOut);
+        clickAnimator.play(rotation);
         clickAnimator.start();
       }
     }
@@ -324,8 +410,8 @@ public class TileView extends View {
       float xOffset = button.getPosition().x - button.getSize() / 2;
       float yOffset = button.getPosition().y - button.getSize() / 2;
       canvas.save();
+      canvas.rotate(button.getRotation(), xOffset + button.getSize() / 2, yOffset + button.getSize() / 2);
       canvas.translate(xOffset, yOffset);
-//      canvas.rotate(mRotAngle++);
       button.getDrawable().draw(canvas);
       canvas.restore();
     }

@@ -7,8 +7,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import java.util.ArrayList;
-
 public class GameActivity extends AppCompatActivity {
 
   private TileView gameView;
@@ -24,11 +22,16 @@ public class GameActivity extends AppCompatActivity {
     gameView = (TileView) findViewById(R.id.game_view);
     Button buttonReset = (Button) findViewById(R.id.button_reset);
     Button buttonReverse = (Button) findViewById(R.id.button_reverse);
-    Button buttonUndo = (Button) findViewById(R.id.button_undo);
+    Button buttonShuffle = (Button) findViewById(R.id.button_shuffle);
+    buttonShuffle.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        gameView.shuffleTiles();
+      }
+    });
     buttonReset.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-
         gameView.resetTiles();
       }
     });
