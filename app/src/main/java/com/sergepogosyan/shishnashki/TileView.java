@@ -8,9 +8,12 @@ import android.animation.TypeEvaluator;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -30,11 +33,21 @@ public class TileView extends View {
   }
 
   public void setDirection(int direction) {
-    this.mDirection = direction;
+    final int dir = direction;
+    Animator hide = hideButtonsAnim();
+    hide.addListener(new AnimatorListenerAdapter() {
+      @Override
+      public void onAnimationEnd(Animator animation) {
+        super.onAnimationEnd(animation);
+        mDirection = dir;
+        startButtonsAnimation().start();
+      }
+    });
+    hide.start();
   }
 
   private int mDirection;
-  private Rect mBounds;
+  private Rect mBounds, mButtonCW, mButtonCCW;
   private int mLeftPad, mTopPad, mTileWidth, mTileHeight;
   private int mTileMarginRatio = 15;
   private int mButtonSizeRatio = 2;
@@ -80,9 +93,12 @@ public class TileView extends View {
 
   private void initButtons() {
     mButtons = new ArrayList<>();
+    Bitmap bitmap = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.button);
+    mButtonCW = new Rect(0, 0, bitmap.getWidth() / 2, bitmap.getHeight());
+    mButtonCCW = new Rect(bitmap.getWidth() / 2, 0, bitmap.getWidth(), bitmap.getHeight());
     for (int i = 0; i < (mTileCount - 1); i++) {
       for (int j = 0; j < (mTileCount - 1); j++) {
-        mButtons.add(new RotateButton(j, i, this));
+        mButtons.add(new RotateButton(j, i, this, bitmap));
       }
     }
   }
@@ -110,6 +126,7 @@ public class TileView extends View {
         for (int i = 0; i < (mTileCount * mTileCount); i++) {
           mTiles.get(i).setNumber(i+1);
         }
+        mDirection = 0;
         startAnimation();
       }
     });
@@ -130,6 +147,7 @@ public class TileView extends View {
         for (int i = 0; i < (mTileCount * mTileCount); i++) {
           mTiles.get(i).setNumber(nums.get(i));
         }
+        mDirection = 0;
         startAnimation();
       }
     });
@@ -391,6 +409,7 @@ public class TileView extends View {
     return tileNumTrg;
   }
 
+  RectF rectDst = new RectF();
   @Override
   protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
@@ -409,10 +428,18 @@ public class TileView extends View {
         mButtons) {
       float xOffset = button.getPosition().x - button.getSize() / 2;
       float yOffset = button.getPosition().y - button.getSize() / 2;
+      rectDst.top = 0;
+      rectDst.left = 0;
+      rectDst.right = button.getSize();
+      rectDst.bottom = button.getSize();
       canvas.save();
       canvas.rotate(button.getRotation(), xOffset + button.getSize() / 2, yOffset + button.getSize() / 2);
       canvas.translate(xOffset, yOffset);
-      button.getDrawable().draw(canvas);
+      if (mDirection == 0) {
+        canvas.drawBitmap(button.getBitmap(), mButtonCW, rectDst, null);
+      } else {
+        canvas.drawBitmap(button.getBitmap(), mButtonCCW, rectDst, null);
+      }
       canvas.restore();
     }
   }

@@ -1,5 +1,7 @@
 package com.sergepogosyan.shishnashki;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -9,9 +11,10 @@ public class RotateButton {
   private Point mPosition;
 
   private float mRotation;
+  private float mSize;
 
   private View mView;
-  private BitmapDrawable mBitmap;
+  private Bitmap mBitmap;
 
   private int mCol, mRow;
 
@@ -22,7 +25,7 @@ public class RotateButton {
     return mRow;
   }
 
-  public Drawable getDrawable() {
+  public Bitmap getBitmap() {
     return mBitmap;
   }
 
@@ -34,11 +37,11 @@ public class RotateButton {
   }
 
   public float getSize() {
-    return mBitmap.getBounds().width();
+    return mSize;
   }
 
   public void setSize(float size) {
-    mBitmap.setBounds(0, 0, (int)size, (int)size);
+    mSize = size;
     mView.postInvalidate();
   }
 
@@ -50,10 +53,10 @@ public class RotateButton {
     this.mRotation = rotation;
   }
 
-  public RotateButton(int col, int row, View view) {
+  public RotateButton(int col, int row, View view, Bitmap bitmap) {
     mCol = col;
     mRow = row;
     mView = view;
-    mBitmap = (BitmapDrawable) mView.getResources().getDrawable(Images.buttons[0]);
+    mBitmap = bitmap;
   }
 }
