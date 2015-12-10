@@ -14,7 +14,10 @@ public class GameActivity extends AppCompatActivity {
   static final String STATE_TIME = "playerTime";
   static final String STATE_TILES = "tileNums";
 
-
+  // TODO: 12/10/2015 add welcome screen
+  // TODO: 12/10/2015 add results screen
+  // TODO: 12/10/2015 implement score and time
+  // TODO: 12/10/2015 implement hints and solution algorithm
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);

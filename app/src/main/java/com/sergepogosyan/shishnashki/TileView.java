@@ -306,7 +306,7 @@ public class TileView extends View {
   }
 
   @Override
-  public boolean onTouchEvent(MotionEvent event) {
+  public boolean onTouchEvent(MotionEvent event) {  //// TODO: 12/10/2015 touchevent should be moved to activity class
     if (event.getAction() != MotionEvent.ACTION_DOWN) {
       return false;
     }
@@ -409,7 +409,7 @@ public class TileView extends View {
       canvas.translate(xOffset, yOffset);
       Rect rectSrc = tile.getRectSrc();
       if (mTiles.indexOf(tile) + 1 == tile.getNumber())
-        tile.getRectSrc().offsetTo(rectSrc.left, rectSrc.height());
+        tile.getRectSrc().offsetTo(rectSrc.left, rectSrc.height()); // TODO: 12/10/2015 change tile color after animation
       else
         tile.getRectSrc().offsetTo(rectSrc.left, 0);
       canvas.drawBitmap(tile.getBitmap(), rectSrc, rectDst, null);

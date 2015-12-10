@@ -32,8 +32,8 @@ public class Tile {
     mNumber = num;
     if (mBitmap != null) {
       int tileWidth = mBitmap.getWidth() / 16;
-      int tileHeigth = mBitmap.getHeight() / 2;
-      setRectSrc(new Rect((num - 1)*tileWidth, 0, num * tileWidth, tileHeigth));
+      int tileHeight = mBitmap.getHeight() / 2;
+      setRectSrc(new Rect((num - 1)*tileWidth, 0, num * tileWidth, tileHeight));
     } else
       Log.e("shishnashki", "bitmap is not set to tile#: " + num);
   }
@@ -50,7 +50,7 @@ public class Tile {
   }
   public void setSize(int size) {
     mSize = size;
-    mView.postInvalidate();
+    mView.postInvalidate(); // TODO: 12/10/2015 minimize invalidate calls amount
   }
 
   public Bitmap getBitmap() {
