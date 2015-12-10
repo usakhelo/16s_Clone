@@ -1,17 +1,28 @@
 package com.sergepogosyan.shishnashki;
 
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.View;
 
 public class Tile {
   private Point mPosition;
-  private int mTileSet;
+  private float mSize;
   private View mView;
-  private BitmapDrawable mBitmap;
+  private Bitmap mBitmap;
+  private Rect mRectSrc;
   private int mNumber;
+
+  public Rect getRectSrc() {
+    return mRectSrc;
+  }
+
+  public void setRectSrc(Rect rectSrc) {
+    this.mRectSrc = rectSrc;
+  }
 
   public int getNumber() {
     return mNumber;
@@ -19,6 +30,12 @@ public class Tile {
 
   public void setNumber(int num) {
     mNumber = num;
+    if (mBitmap != null) {
+      int tileWidth = mBitmap.getWidth() / 16;
+      int tileHeigth = mBitmap.getHeight() / 2;
+      setRectSrc(new Rect((num - 1)*tileWidth, 0, num * tileWidth, tileHeigth));
+    } else
+      Log.e("shishnashki", "bitmap is not set to tile#: " + num);
   }
 
   public Point getPosition() {
@@ -29,27 +46,20 @@ public class Tile {
     mView.postInvalidate();
   }
   public int getSize() {
-    return mBitmap.getBounds().width();
+    return (int)mSize;
   }
   public void setSize(int size) {
-    mBitmap.setBounds(0, 0, size, size);
+    mSize = size;
     mView.postInvalidate();
   }
 
-  public Drawable getDrawable() {
+  public Bitmap getBitmap() {
     return mBitmap;
   }
 
-  public void setTile(boolean set) {
-    mTileSet = set ? 1 : 0;
-    Rect size = mBitmap.getBounds();
-    mBitmap = (BitmapDrawable) mView.getResources().getDrawable(Images.tiles[mTileSet][mNumber-1]);
-    mBitmap.setBounds(0, 0, size.width(), size.height());
-  }
-
-  public Tile(int num, View view) {
-    mNumber = num;
+  public Tile(int num, Bitmap bitmap, View view) {
     mView = view;
-    mBitmap = (BitmapDrawable) mView.getResources().getDrawable(Images.tiles[mTileSet][mNumber-1]);
+    mBitmap = bitmap;
+    setNumber(num);
   }
 }
