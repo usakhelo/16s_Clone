@@ -1,68 +1,72 @@
 package com.sergepogosyan.shishnashki;
 
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity
+    implements WelcomeFragment.OnFragmentInteractionListener,
+    GameFragment.OnFragmentInteractionListener {
 
   private TileView gameView;
   static final String STATE_SCORE = "playerScore";
   static final String STATE_TIME = "playerTime";
   static final String STATE_TILES = "tileNums";
 
-  // TODO: 12/10/2015 add welcome screen
-  // TODO: 12/10/2015 add results screen
+  private Fragment welcomeScreen;
+  // TODO: 12/10/2015 add welcome screen - start button, description, "like" button
+  // TODO: 12/10/2015 add results screen - restart button, score
   // TODO: 12/10/2015 implement score and time
   // TODO: 12/10/2015 implement hints and solution algorithm
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.game_layout);
-    gameView = (TileView) findViewById(R.id.game_view);
-    Button buttonReset = (Button) findViewById(R.id.button_reset);
-    Button buttonReverse = (Button) findViewById(R.id.button_reverse);
-    Button buttonShuffle = (Button) findViewById(R.id.button_shuffle);
-    buttonShuffle.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        gameView.shuffleTiles();
-      }
-    });
-    buttonReset.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        gameView.resetTiles();
-      }
-    });
-    buttonReverse.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        gameView.setDirection(1 - gameView.getDirection());
-      }
-    });
-    // Check whether we're recreating a previously destroyed instance
-    if (savedInstanceState != null) {
-      int[] numTiles = savedInstanceState.getIntArray(STATE_TILES);
-      gameView.setTiles(numTiles);
-    }
-    else {
-//      gameView.initTiles(null);
-    }
+    showWelcomeDialog();
+//    showGameDialog2();
   }
 
   @Override
   public void onSaveInstanceState(Bundle savedInstanceState) {
-    // Save the user's current game state
-//    savedInstanceState.putInt(STATE_SCORE, mCurrentScore);
-//    savedInstanceState.putInt(STATE_LEVEL, mCurrentLevel);
-    int[] tileNums = gameView.getTiles();
-    savedInstanceState.putIntArray(STATE_TILES, tileNums);
     // Always call the superclass so it can save the view hierarchy state
     super.onSaveInstanceState(savedInstanceState);
+  }
+
+  private void showWelcomeDialog() {
+    FragmentManager fm = getSupportFragmentManager();
+    welcomeScreen = WelcomeFragment.newInstance("test1", "test2");
+    ((WelcomeFragment )welcomeScreen).show(fm, "fragment_edit_name");
+  }
+  private void showGameDialog2() {
+    FragmentManager fm = getSupportFragmentManager();
+    GameFragment welcomeScreen = GameFragment.newInstance("test1", "test2");
+    welcomeScreen.show(fm, "fragment_edit_name");
+  }
+  private void showGameDialog() {
+    FragmentManager fm = getSupportFragmentManager();
+    GameFragment welcomeScreen = GameFragment.newInstance("test1", "test2");
+
+    FragmentTransaction transaction = fm.beginTransaction();
+
+//    transaction.setCustomAnimations(R.anim.abc_slide_in_bottom, R.anim.abc_slide_out_top, R.anim.abc_slide_in_top, R.anim.abc_slide_out_bottom);
+
+//    transaction.setTransition(FragmentTransaction.TRANSIT_NONE);
+    transaction.replace(android.R.id.content, welcomeScreen)
+        .commit();
+  }
+
+  @Override
+  public void onBackPressed() {
+    if(welcomeScreen.isVisible())
+      super.onBackPressed();
+//      welcomeScreen.onBackPressed();
+//    else
   }
 
   @Override
@@ -85,5 +89,14 @@ public class GameActivity extends AppCompatActivity {
     }
 
     return super.onOptionsItemSelected(item);
+  }
+
+  @Override
+  public void onFragmentInteraction(Uri uri) {
+
+  }
+  @Override
+  public void onFragmentInteraction2(String str) {
+    showGameDialog();
   }
 }
