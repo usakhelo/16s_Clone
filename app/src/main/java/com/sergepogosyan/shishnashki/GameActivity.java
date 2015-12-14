@@ -30,11 +30,12 @@ public class GameActivity extends AppCompatActivity
     super.onCreate(savedInstanceState);
 
     currentState = GameState.welcome;
+    Log.i(TAG, "onCreate: " + savedInstanceState);
+
     if (savedInstanceState != null) {
-      GameState state = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
-      switchState(state);
+      currentState = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
     } else {
-      switchState(GameState.welcome);
+      currentState = GameState.welcome;
     }
   }
 
@@ -42,6 +43,12 @@ public class GameActivity extends AppCompatActivity
   public void onSaveInstanceState(Bundle savedInstanceState) {
     savedInstanceState.putString(STATE_GAME, currentState.toString());
     super.onSaveInstanceState(savedInstanceState);
+  }
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    switchState(currentState);
   }
 
   private void showWelcomeDialog() {
@@ -58,41 +65,23 @@ public class GameActivity extends AppCompatActivity
 
   private void showGameDialog() {
     FragmentManager fm = getSupportFragmentManager();
-    GameFragment gameScreen = GameFragment.newInstance("test1", "test2");
+    Fragment gameScreen = fm.findFragmentByTag("game");
+    Log.i(TAG, "showGameDialog before: " + gameScreen);
+    if (gameScreen != null) {
+      fm.beginTransaction().remove(gameScreen).commit();
+    }
+    gameScreen = GameFragment.newInstance("test1", "test2");
     FragmentTransaction transaction = fm.beginTransaction();
     transaction.setCustomAnimations(R.anim.abc_fade_in, R.anim.abc_fade_out, R.anim.abc_popup_enter, R.anim.abc_popup_exit);
     transaction.replace(android.R.id.content, gameScreen, "game").commit();
+    Log.i(TAG, "showGameDialog after: " + gameScreen);
   }
 
   @Override
   public void onBackPressed() {
     Log.i(TAG, "onBackPressed: true");
-//    if(welcomeScreen.isVisible())
 //    super.onBackPressed();
     switchState(GameState.welcome);
-//    else
-  }
-
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    // Inflate the menu; this adds items to the action bar if it is present.
-    getMenuInflater().inflate(R.menu.menu_game, menu);
-    return true;
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    // Handle action bar item clicks here. The action bar will
-    // automatically handle clicks on the Home/Up button, so long
-    // as you specify a parent activity in AndroidManifest.xml.
-    int id = item.getItemId();
-
-    //noinspection SimplifiableIfStatement
-    if (id == R.id.action_settings) {
-      return true;
-    }
-
-    return super.onOptionsItemSelected(item);
   }
 
   @Override
@@ -121,9 +110,9 @@ public class GameActivity extends AppCompatActivity
         //remove game and results fragments
         FragmentManager fm = getSupportFragmentManager();
         Fragment game = fm.findFragmentByTag("game");
+        Log.i(TAG, "switchState: " + game);
         if (game != null){
-          FragmentTransaction transaction = fm.beginTransaction();
-          transaction.remove(game).commit();
+          fm.beginTransaction().remove(game).commit();
         }
         showWelcomeDialog();
         break;
@@ -131,7 +120,7 @@ public class GameActivity extends AppCompatActivity
         //remove welcome fragment
         //if from welcome init for new game
         //if not init from saved state
-        if (!welcomeScreen.isHidden())
+        if (welcomeScreen != null && !welcomeScreen.isHidden())
           ((WelcomeFragment)welcomeScreen).dismiss();
         showGameDialog();
         break;

@@ -16,22 +16,10 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link OnWelcomeListener} interface
- * to handle interaction events.
- * Use the {@link WelcomeFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class WelcomeFragment extends DialogFragment {
-  // TODO: Rename parameter arguments, choose names that match
-  // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
   private static final String ARG_PARAM1 = "param1";
   private static final String ARG_PARAM2 = "param2";
 
-  // TODO: Rename and change types of parameters
   private String mParam1;
   private String mParam2;
 
@@ -46,7 +34,6 @@ public class WelcomeFragment extends DialogFragment {
    * @param param2 Parameter 2.
    * @return A new instance of fragment WelcomeFragment.
    */
-  // TODO: Rename and change types and number of parameters
   public static WelcomeFragment newInstance(String param1, String param2) {
     WelcomeFragment fragment = new WelcomeFragment();
     Bundle args = new Bundle();
@@ -94,7 +81,6 @@ public class WelcomeFragment extends DialogFragment {
   @Override
   public void onCancel(DialogInterface dialogInterface) {
     mListener.onExitGame();
-    Log.i(TAG, "onCancel: true");// TODO: 12/13/2015 handle application exit
   }
 
   @Override
