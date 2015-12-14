@@ -1,7 +1,6 @@
 package com.sergepogosyan.shishnashki;
 
 import android.app.Activity;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -15,7 +14,7 @@ import android.widget.Button;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link GameFragment.OnFragmentInteractionListener} interface
+ * {@link OnGameListener} interface
  * to handle interaction events.
  * Use the {@link GameFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -35,7 +34,7 @@ public class GameFragment extends DialogFragment {
   static final String STATE_TILES = "tileNums";
 
   private TileView gameView;
-  private OnFragmentInteractionListener mListener;
+  private OnGameListener mListener;
 
   /**
    * Use this factory method to create a new instance of
@@ -95,6 +94,7 @@ public class GameFragment extends DialogFragment {
         gameView.setDirection(1 - gameView.getDirection());
       }
     });
+
     if (savedInstanceState != null) {
       int[] numTiles = savedInstanceState.getIntArray(STATE_TILES);
       gameView.setTiles(numTiles);
@@ -105,21 +105,14 @@ public class GameFragment extends DialogFragment {
     return content;
   }
 
-  // TODO: Rename method, update argument and hook method into UI event
-  public void onButtonPressed(Uri uri) {
-    if (mListener != null) {
-      mListener.onFragmentInteraction(uri);
-    }
-  }
-
   @Override
   public void onAttach(Activity context) {
     super.onAttach(context);
-    if (context instanceof OnFragmentInteractionListener) {
-      mListener = (OnFragmentInteractionListener) context;
+    if (context instanceof OnGameListener) {
+      mListener = (OnGameListener) context;
     } else {
       throw new RuntimeException(context.toString()
-          + " must implement OnFragmentInteractionListener");
+          + " must implement OnGameListener");
     }
   }
 
@@ -133,22 +126,11 @@ public class GameFragment extends DialogFragment {
   public void onSaveInstanceState(Bundle savedInstanceState) {
     int[] tileNums = gameView.getTiles();
     savedInstanceState.putIntArray(STATE_TILES, tileNums);
-    // Always call the superclass so it can save the view hierarchy state
     super.onSaveInstanceState(savedInstanceState);
   }
 
-  /**
-   * This interface must be implemented by activities that contain this
-   * fragment to allow an interaction in this fragment to be communicated
-   * to the activity and potentially other fragments contained in that
-   * activity.
-   * <p/>
-   * See the Android Training lesson <a href=
-   * "http://developer.android.com/training/basics/fragments/communicating.html"
-   * >Communicating with Other Fragments</a> for more information.
-   */
-  public interface OnFragmentInteractionListener {
-    // TODO: Update argument type and name
-    void onFragmentInteraction(Uri uri);
+  public interface OnGameListener {
+    void onGameWon(String str);
+    void onQuitGame(String str);
   }
 }

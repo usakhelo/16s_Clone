@@ -2,23 +2,25 @@ package com.sergepogosyan.shishnashki;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.net.Uri;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link WelcomeFragment.OnFragmentInteractionListener} interface
+ * {@link OnWelcomeListener} interface
  * to handle interaction events.
  * Use the {@link WelcomeFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -33,7 +35,8 @@ public class WelcomeFragment extends DialogFragment {
   private String mParam1;
   private String mParam2;
 
-  private OnFragmentInteractionListener mListener;
+  private OnWelcomeListener mListener;
+  private static final String TAG = "shishnashki welcome";
 
   /**
    * Use this factory method to create a new instance of
@@ -66,34 +69,42 @@ public class WelcomeFragment extends DialogFragment {
   }
 
   @Override
+  @NonNull
   public Dialog onCreateDialog(Bundle savedInstanceState) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-    // Get the layout inflater
     LayoutInflater inflater = getActivity().getLayoutInflater();
-    // Inflate and set the layout for the dialog
-    // Pass null as the parent view because its going in the dialog layout
     View content = inflater.inflate(R.layout.fragment_welcome, null);
     Button startButton = (Button)content.findViewById(R.id.start_button);
     final DialogFragment thisDialog = this;
     startButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        thisDialog.dismiss();
-        mListener.onFragmentInteraction2("");
+//        thisDialog.dismiss();
+        mListener.onStartGame("");
       }
     });
     builder.setView(content);
-    return builder.create();
+    Dialog dialog = builder.create();
+    dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+    dialog.setCanceledOnTouchOutside(false);
+    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+    return dialog;
+  }
+
+  @Override
+  public void onCancel(DialogInterface dialogInterface) {
+    mListener.onExitGame();
+    Log.i(TAG, "onCancel: true");// TODO: 12/13/2015 handle application exit
   }
 
   @Override
   public void onAttach(Activity context) {
     super.onAttach(context);
-    if (context instanceof OnFragmentInteractionListener) {
-      mListener = (OnFragmentInteractionListener) context;
+    if (context instanceof OnWelcomeListener) {
+      mListener = (OnWelcomeListener) context;
     } else {
       throw new RuntimeException(context.toString()
-          + " must implement OnFragmentInteractionListener");
+          + " must implement OnWelcomeListener");
     }
   }
 
@@ -103,18 +114,8 @@ public class WelcomeFragment extends DialogFragment {
     mListener = null;
   }
 
-  /**
-   * This interface must be implemented by activities that contain this
-   * fragment to allow an interaction in this fragment to be communicated
-   * to the activity and potentially other fragments contained in that
-   * activity.
-   * <p/>
-   * See the Android Training lesson <a href=
-   * "http://developer.android.com/training/basics/fragments/communicating.html"
-   * >Communicating with Other Fragments</a> for more information.
-   */
-  public interface OnFragmentInteractionListener {
-    // TODO: Update argument type and name
-    void onFragmentInteraction2(String str);
+  public interface OnWelcomeListener {
+    void onStartGame(String str);
+    void onExitGame();
   }
 }

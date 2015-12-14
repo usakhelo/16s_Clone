@@ -6,21 +6,21 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 
 public class GameActivity extends AppCompatActivity
-    implements WelcomeFragment.OnFragmentInteractionListener,
-    GameFragment.OnFragmentInteractionListener {
+    implements WelcomeFragment.OnWelcomeListener,
+    GameFragment.OnGameListener {
 
-  private TileView gameView;
-  static final String STATE_SCORE = "playerScore";
-  static final String STATE_TIME = "playerTime";
-  static final String STATE_TILES = "tileNums";
+  private static final String TAG = "shishnashki activity";
+  static final String STATE_GAME = "gameState";
 
-  private Fragment welcomeScreen;
+  enum GameState {welcome, started, results, finished}
+  private GameState currentState;
+
+  private Fragment welcomeScreen, resultsScreen;
   // TODO: 12/10/2015 add welcome screen - start button, description, "like" button
   // TODO: 12/10/2015 add results screen - restart button, score
   // TODO: 12/10/2015 implement score and time
@@ -28,44 +28,48 @@ public class GameActivity extends AppCompatActivity
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    showWelcomeDialog();
-//    showGameDialog2();
+
+    currentState = GameState.welcome;
+    if (savedInstanceState != null) {
+      GameState state = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
+      switchState(state);
+    } else {
+      switchState(GameState.welcome);
+    }
   }
 
   @Override
   public void onSaveInstanceState(Bundle savedInstanceState) {
-    // Always call the superclass so it can save the view hierarchy state
+    savedInstanceState.putString(STATE_GAME, currentState.toString());
     super.onSaveInstanceState(savedInstanceState);
   }
 
   private void showWelcomeDialog() {
     FragmentManager fm = getSupportFragmentManager();
     welcomeScreen = WelcomeFragment.newInstance("test1", "test2");
-    ((WelcomeFragment )welcomeScreen).show(fm, "fragment_edit_name");
+    ((WelcomeFragment )welcomeScreen).show(fm, "welcome");
   }
-  private void showGameDialog2() {
+
+  private void showResultsDialog() {
     FragmentManager fm = getSupportFragmentManager();
-    GameFragment welcomeScreen = GameFragment.newInstance("test1", "test2");
-    welcomeScreen.show(fm, "fragment_edit_name");
+    resultsScreen = WelcomeFragment.newInstance("test1", "test2");
+    ((WelcomeFragment )resultsScreen).show(fm, "results");
   }
+
   private void showGameDialog() {
     FragmentManager fm = getSupportFragmentManager();
-    GameFragment welcomeScreen = GameFragment.newInstance("test1", "test2");
-
+    GameFragment gameScreen = GameFragment.newInstance("test1", "test2");
     FragmentTransaction transaction = fm.beginTransaction();
-
-//    transaction.setCustomAnimations(R.anim.abc_slide_in_bottom, R.anim.abc_slide_out_top, R.anim.abc_slide_in_top, R.anim.abc_slide_out_bottom);
-
-//    transaction.setTransition(FragmentTransaction.TRANSIT_NONE);
-    transaction.replace(android.R.id.content, welcomeScreen)
-        .commit();
+    transaction.setCustomAnimations(R.anim.abc_fade_in, R.anim.abc_fade_out, R.anim.abc_popup_enter, R.anim.abc_popup_exit);
+    transaction.replace(android.R.id.content, gameScreen, "game").commit();
   }
 
   @Override
   public void onBackPressed() {
-    if(welcomeScreen.isVisible())
-      super.onBackPressed();
-//      welcomeScreen.onBackPressed();
+    Log.i(TAG, "onBackPressed: true");
+//    if(welcomeScreen.isVisible())
+//    super.onBackPressed();
+    switchState(GameState.welcome);
 //    else
   }
 
@@ -92,11 +96,55 @@ public class GameActivity extends AppCompatActivity
   }
 
   @Override
-  public void onFragmentInteraction(Uri uri) {
-
+  public void onGameWon(String str) {
+    switchState(GameState.results);
   }
+
   @Override
-  public void onFragmentInteraction2(String str) {
-    showGameDialog();
+  public void onQuitGame(String str) {
+    switchState(GameState.welcome);
+  }
+
+  @Override
+  public void onStartGame(String str) {
+    switchState(GameState.started);
+  }
+
+  @Override
+  public void onExitGame() {
+    switchState(GameState.finished);
+  }
+
+  private void switchState(GameState state) {
+    switch (state) {
+      case welcome:
+        //remove game and results fragments
+        FragmentManager fm = getSupportFragmentManager();
+        Fragment game = fm.findFragmentByTag("game");
+        if (game != null){
+          FragmentTransaction transaction = fm.beginTransaction();
+          transaction.remove(game).commit();
+        }
+        showWelcomeDialog();
+        break;
+      case started:
+        //remove welcome fragment
+        //if from welcome init for new game
+        //if not init from saved state
+        if (!welcomeScreen.isHidden())
+          ((WelcomeFragment)welcomeScreen).dismiss();
+        showGameDialog();
+        break;
+      case results:
+        //show results fragment
+        break;
+      case finished:
+        //if prevstate started then save tileview
+        //if prevstate welcome then exit
+        //if results go to welcome
+        finish();
+        break;
+    }
+    currentState = state;
   }
 }
