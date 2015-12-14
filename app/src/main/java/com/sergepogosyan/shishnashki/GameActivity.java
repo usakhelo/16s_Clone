@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.List;
+
 public class GameActivity extends AppCompatActivity
     implements WelcomeFragment.OnWelcomeListener,
     GameFragment.OnGameListener {
@@ -66,15 +68,18 @@ public class GameActivity extends AppCompatActivity
   private void showGameDialog() {
     FragmentManager fm = getSupportFragmentManager();
     Fragment gameScreen = fm.findFragmentByTag("game");
+    Log.i(TAG, "showGameDialog : " + fm.getFragments());
     Log.i(TAG, "showGameDialog before: " + gameScreen);
     if (gameScreen != null) {
       fm.beginTransaction().remove(gameScreen).commit();
+      fm.executePendingTransactions();
     }
     gameScreen = GameFragment.newInstance("test1", "test2");
     FragmentTransaction transaction = fm.beginTransaction();
     transaction.setCustomAnimations(R.anim.abc_fade_in, R.anim.abc_fade_out, R.anim.abc_popup_enter, R.anim.abc_popup_exit);
     transaction.replace(android.R.id.content, gameScreen, "game").commit();
     Log.i(TAG, "showGameDialog after: " + gameScreen);
+    Log.i(TAG, "showGameDialog : " + fm.getFragments());
   }
 
   @Override
@@ -110,6 +115,7 @@ public class GameActivity extends AppCompatActivity
         //remove game and results fragments
         FragmentManager fm = getSupportFragmentManager();
         Fragment game = fm.findFragmentByTag("game");
+        Log.i(TAG, "switchState: " + fm.getFragments());
         Log.i(TAG, "switchState: " + game);
         if (game != null){
           fm.beginTransaction().remove(game).commit();
