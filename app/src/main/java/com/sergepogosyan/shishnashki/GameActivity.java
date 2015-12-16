@@ -9,6 +9,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
 import java.util.List;
 
@@ -18,9 +20,12 @@ public class GameActivity extends AppCompatActivity
 
   private static final String TAG = "shishnashki activity";
   static final String STATE_GAME = "gameState";
+  static final String STATE_TILES = "tileNums";
 
   enum GameState {welcome, started, results, finished}
   private GameState currentState;
+  private int[] gameTiles;
+  private TileView gameView;
 
   private Fragment welcomeScreen, resultsScreen;
   // TODO: 12/10/2015 add welcome screen - start button, description, "like" button
@@ -32,17 +37,42 @@ public class GameActivity extends AppCompatActivity
     super.onCreate(savedInstanceState);
 
     currentState = GameState.welcome;
-    Log.i(TAG, "onCreate: " + savedInstanceState);
 
+    Log.i(TAG, "onCreate: " + savedInstanceState);
+    setContentView(R.layout.game_layout);
+
+    gameView = (TileView) findViewById(R.id.game_view);
+    Button buttonReset = (Button) findViewById(R.id.button_reset);
+    Button buttonReverse = (Button) findViewById(R.id.button_reverse);
+    Button buttonShuffle = (Button) findViewById(R.id.button_shuffle);
+    buttonShuffle.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        gameView.shuffleTiles();
+      }
+    });
+    buttonReset.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        gameView.resetTiles();
+      }
+    });
+    buttonReverse.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        gameView.setDirection(1 - gameView.getDirection());
+      }
+    });
     if (savedInstanceState != null) {
       currentState = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
-    } else {
-      currentState = GameState.welcome;
+      gameTiles = savedInstanceState.getIntArray(STATE_TILES);
+      gameView.setTiles(gameTiles);
     }
   }
 
   @Override
   public void onSaveInstanceState(Bundle savedInstanceState) {
+    savedInstanceState.putIntArray(STATE_TILES, gameView.getTiles());
     savedInstanceState.putString(STATE_GAME, currentState.toString());
     super.onSaveInstanceState(savedInstanceState);
   }
@@ -50,7 +80,7 @@ public class GameActivity extends AppCompatActivity
   @Override
   protected void onStart() {
     super.onStart();
-    switchState(currentState);
+//    switchState(currentState);
   }
 
   private void showWelcomeDialog() {
@@ -66,27 +96,14 @@ public class GameActivity extends AppCompatActivity
   }
 
   private void showGameDialog() {
-    FragmentManager fm = getSupportFragmentManager();
-    Fragment gameScreen = fm.findFragmentByTag("game");
-    Log.i(TAG, "showGameDialog : " + fm.getFragments());
-    Log.i(TAG, "showGameDialog before: " + gameScreen);
-    if (gameScreen != null) {
-      fm.beginTransaction().remove(gameScreen).commit();
-      fm.executePendingTransactions();
-    }
-    gameScreen = GameFragment.newInstance("test1", "test2");
-    FragmentTransaction transaction = fm.beginTransaction();
-    transaction.setCustomAnimations(R.anim.abc_fade_in, R.anim.abc_fade_out, R.anim.abc_popup_enter, R.anim.abc_popup_exit);
-    transaction.replace(android.R.id.content, gameScreen, "game").commit();
-    Log.i(TAG, "showGameDialog after: " + gameScreen);
-    Log.i(TAG, "showGameDialog : " + fm.getFragments());
+    Log.i(TAG, "showGameDialog after: ");
   }
 
   @Override
   public void onBackPressed() {
     Log.i(TAG, "onBackPressed: true");
-//    super.onBackPressed();
-    switchState(GameState.welcome);
+    super.onBackPressed();
+//    switchState(GameState.welcome);
   }
 
   @Override
@@ -113,13 +130,6 @@ public class GameActivity extends AppCompatActivity
     switch (state) {
       case welcome:
         //remove game and results fragments
-        FragmentManager fm = getSupportFragmentManager();
-        Fragment game = fm.findFragmentByTag("game");
-        Log.i(TAG, "switchState: " + fm.getFragments());
-        Log.i(TAG, "switchState: " + game);
-        if (game != null){
-          fm.beginTransaction().remove(game).commit();
-        }
         showWelcomeDialog();
         break;
       case started:
