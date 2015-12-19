@@ -1,5 +1,6 @@
 package com.sergepogosyan.shishnashki;
 
+import android.animation.LayoutTransition;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,13 +11,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 
 import java.util.List;
 
-public class GameActivity extends AppCompatActivity
-    implements WelcomeFragment.OnWelcomeListener,
-    GameFragment.OnGameListener {
+public class GameActivity extends AppCompatActivity {
 
   private static final String TAG = "shishnashki activity";
   static final String STATE_GAME = "gameState";
@@ -27,7 +27,8 @@ public class GameActivity extends AppCompatActivity
   private int[] gameTiles;
   private TileView gameView;
 
-  private Fragment welcomeScreen, resultsScreen;
+  private View welcomeScreen, gameScreen, resultsScreen;
+  private ViewGroup container;
   // TODO: 12/10/2015 add welcome screen - start button, description, "like" button
   // TODO: 12/10/2015 add results screen - restart button, score
   // TODO: 12/10/2015 implement score and time
@@ -41,10 +42,24 @@ public class GameActivity extends AppCompatActivity
     Log.i(TAG, "onCreate: " + savedInstanceState);
     setContentView(R.layout.game_layout);
 
+    container = (ViewGroup) findViewById(R.id.container);
+    final LayoutTransition transitioner = new LayoutTransition();
+    container.setLayoutTransition(transitioner);
+
+    welcomeScreen = findViewById(R.id.welcome_screen);
+    gameScreen = findViewById(R.id.game_screen);
     gameView = (TileView) findViewById(R.id.game_view);
+
     Button buttonReset = (Button) findViewById(R.id.button_reset);
     Button buttonReverse = (Button) findViewById(R.id.button_reverse);
     Button buttonShuffle = (Button) findViewById(R.id.button_shuffle);
+    Button startButton = (Button) findViewById(R.id.start_button);
+    startButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        switchState(GameState.started);
+      }
+    });
     buttonShuffle.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
@@ -80,48 +95,48 @@ public class GameActivity extends AppCompatActivity
   @Override
   protected void onStart() {
     super.onStart();
-//    switchState(currentState);
+    switchState(currentState);
   }
 
   private void showWelcomeDialog() {
-    FragmentManager fm = getSupportFragmentManager();
-    welcomeScreen = WelcomeFragment.newInstance("test1", "test2");
-    ((WelcomeFragment )welcomeScreen).show(fm, "welcome");
+    welcomeScreen.setVisibility(View.VISIBLE);
   }
 
   private void showResultsDialog() {
-    FragmentManager fm = getSupportFragmentManager();
-    resultsScreen = WelcomeFragment.newInstance("test1", "test2");
-    ((WelcomeFragment )resultsScreen).show(fm, "results");
   }
 
   private void showGameDialog() {
     Log.i(TAG, "showGameDialog after: ");
+    gameScreen.setVisibility(View.VISIBLE);
   }
 
   @Override
   public void onBackPressed() {
     Log.i(TAG, "onBackPressed: true");
-    super.onBackPressed();
-//    switchState(GameState.welcome);
+    switch (currentState) {
+      case started:
+        switchState(GameState.welcome);
+        break;
+      case welcome:
+        super.onBackPressed();
+        break;
+      case finished:
+        break;
+    }
   }
 
-  @Override
   public void onGameWon(String str) {
     switchState(GameState.results);
   }
 
-  @Override
   public void onQuitGame(String str) {
     switchState(GameState.welcome);
   }
 
-  @Override
   public void onStartGame(String str) {
     switchState(GameState.started);
   }
 
-  @Override
   public void onExitGame() {
     switchState(GameState.finished);
   }
@@ -130,14 +145,14 @@ public class GameActivity extends AppCompatActivity
     switch (state) {
       case welcome:
         //remove game and results fragments
+        gameScreen.setVisibility(View.GONE);
         showWelcomeDialog();
         break;
       case started:
         //remove welcome fragment
         //if from welcome init for new game
         //if not init from saved state
-        if (welcomeScreen != null && !welcomeScreen.isHidden())
-          ((WelcomeFragment)welcomeScreen).dismiss();
+        welcomeScreen.setVisibility(View.GONE);
         showGameDialog();
         break;
       case results:
