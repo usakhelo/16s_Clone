@@ -7,9 +7,9 @@
     >
     <RelativeLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="400dp"
         android:id="@+id/welcome_screen"
-        android:layout_centerInParent="true"
+        android:layout_centerVertical="true"
         android:visibility="gone"
         >
 
@@ -30,7 +30,7 @@
             android:paddingBottom="50dp"
             android:textColor="@android:color/white"
             android:layout_centerHorizontal="true"
-            android:text="@string/hello_blank_fragment"/>
+            android:text="@string/welcome_text1"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -106,4 +106,40 @@
             android:text="Reverse"
             />
     </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="400dp"
+        android:id="@+id/results_screen"
+        android:layout_centerVertical="true"
+        android:visibility="gone"
+        >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="350dp"
+            android:padding="10dp"
+            android:src="@drawable/dialog_rect01"
+            android:scaleType="fitCenter"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/text2"
+            android:textSize="30sp"
+            android:paddingTop="150dp"
+            android:paddingBottom="50dp"
+            android:textColor="@android:color/white"
+            android:layout_centerHorizontal="true"
+            android:text="@string/result_text1"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/play_again_button"
+            android:layout_below="@id/text2"
+            android:layout_centerHorizontal="true"
+            android:textSize="30sp"
+            android:text="Play again"/>
+    </RelativeLayout>
+
 </RelativeLayout>

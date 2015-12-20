@@ -29,7 +29,7 @@ import java.util.List;
 public class TileView extends View {
 
   private int mDirection;
-  private Rect mButtonCW, mButtonCCW;
+  private Rect mButtonRectCW, mButtonRectCCW;
   private int mTileWidth;
   private int mTileMarginRatio = 10;
   private int mButtonSizeRatio = 2;
@@ -141,8 +141,8 @@ public class TileView extends View {
   private void initButtons() {
     mButtons = new ArrayList<>();
     Bitmap bitmap = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.button);
-    mButtonCW = new Rect(0, 0, bitmap.getWidth() / 2, bitmap.getHeight());
-    mButtonCCW = new Rect(bitmap.getWidth() / 2, 0, bitmap.getWidth(), bitmap.getHeight());
+    mButtonRectCW = new Rect(0, 0, bitmap.getWidth() / 2, bitmap.getHeight());
+    mButtonRectCCW = new Rect(bitmap.getWidth() / 2, 0, bitmap.getWidth(), bitmap.getHeight());
     for (int i = 0; i < (mTileCount - 1); i++) {
       for (int j = 0; j < (mTileCount - 1); j++) {
         mButtons.add(new RotateButton(j, i, this, bitmap));
@@ -296,13 +296,6 @@ public class TileView extends View {
     moveAnimatorSet = new AnimatorSet();
     moveAnimatorSet.play(tileAnimatorSet).before(buttonAnimatorSet);
     moveAnimatorSet.start();
-
-//    ValueAnimator colorAnim = ObjectAnimator.ofInt(this, "backgroundColor", 0xffFF8080, 0xff8080FF);
-//    colorAnim.setDuration(3000);
-//    colorAnim.setEvaluator(new ArgbEvaluator());
-//    colorAnim.setRepeatCount(ValueAnimator.INFINITE);
-//    colorAnim.setRepeatMode(ValueAnimator.REVERSE);
-//    colorAnim.start();
   }
 
   @Override
@@ -323,8 +316,7 @@ public class TileView extends View {
     //find four tile around the button
     //play animation of tiles moving to their new places
     RotateButton pressedButton = null;
-    for (RotateButton button :
-        mButtons) {
+    for (RotateButton button : mButtons) {
       float butX = button.getPosition().x;
       float butY = button.getPosition().y;
       double squareDistance = Math.pow(butX - x, 2) + Math.pow(butY - y, 2);
@@ -336,9 +328,7 @@ public class TileView extends View {
         ObjectAnimator rotation = ObjectAnimator.ofFloat(button, "rotation", 0, endRot);
         rotation.setDuration(300);
         rotation.setInterpolator(new DecelerateInterpolator());
-        AnimatorSet clickAnimator = new AnimatorSet();
-        clickAnimator.play(rotation);
-        clickAnimator.start();
+        rotation.start();
       }
     }
 
@@ -416,8 +406,7 @@ public class TileView extends View {
       canvas.restore();
     }
 
-    for (RotateButton button :
-        mButtons) {
+    for (RotateButton button : mButtons) {
       float xOffset = button.getPosition().x - button.getSize() / 2;
       float yOffset = button.getPosition().y - button.getSize() / 2;
       rectDst.top = 0;
@@ -425,12 +414,12 @@ public class TileView extends View {
       rectDst.right = button.getSize();
       rectDst.bottom = button.getSize();
       canvas.save();
-      canvas.rotate(button.getRotation(), xOffset + button.getSize() / 2, yOffset + button.getSize() / 2);
+      canvas.rotate(button.getRotation(), button.getPosition().x, button.getPosition().y);
       canvas.translate(xOffset, yOffset);
       if (mDirection == 0) {
-        canvas.drawBitmap(button.getBitmap(), mButtonCW, rectDst, null);
+        canvas.drawBitmap(button.getBitmap(), mButtonRectCW, rectDst, null);
       } else {
-        canvas.drawBitmap(button.getBitmap(), mButtonCCW, rectDst, null);
+        canvas.drawBitmap(button.getBitmap(), mButtonRectCCW, rectDst, null);
       }
       canvas.restore();
     }

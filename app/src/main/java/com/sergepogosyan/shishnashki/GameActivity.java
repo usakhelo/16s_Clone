@@ -1,26 +1,19 @@
 package com.sergepogosyan.shishnashki;
 
 import android.animation.LayoutTransition;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-
-import java.util.List;
 
 public class GameActivity extends AppCompatActivity {
 
   private static final String TAG = "shishnashki activity";
   static final String STATE_GAME = "gameState";
   static final String STATE_TILES = "tileNums";
+  static final String STATE_DIRECTION = "direction";
 
   enum GameState {welcome, started, results, finished}
   private GameState currentState;
@@ -33,6 +26,7 @@ public class GameActivity extends AppCompatActivity {
   // TODO: 12/10/2015 add results screen - restart button, score
   // TODO: 12/10/2015 implement score and time
   // TODO: 12/10/2015 implement hints and solution algorithm
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -43,17 +37,19 @@ public class GameActivity extends AppCompatActivity {
     setContentView(R.layout.game_layout);
 
     container = (ViewGroup) findViewById(R.id.container);
-    final LayoutTransition transitioner = new LayoutTransition();
+    LayoutTransition transitioner = new LayoutTransition();
     container.setLayoutTransition(transitioner);
 
     welcomeScreen = findViewById(R.id.welcome_screen);
     gameScreen = findViewById(R.id.game_screen);
+    resultsScreen = findViewById(R.id.results_screen);
     gameView = (TileView) findViewById(R.id.game_view);
 
     Button buttonReset = (Button) findViewById(R.id.button_reset);
     Button buttonReverse = (Button) findViewById(R.id.button_reverse);
     Button buttonShuffle = (Button) findViewById(R.id.button_shuffle);
     Button startButton = (Button) findViewById(R.id.start_button);
+
     startButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
@@ -78,16 +74,21 @@ public class GameActivity extends AppCompatActivity {
         gameView.setDirection(1 - gameView.getDirection());
       }
     });
+
     if (savedInstanceState != null) {
       currentState = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
       gameTiles = savedInstanceState.getIntArray(STATE_TILES);
+      int direction = savedInstanceState.getInt(STATE_DIRECTION);
+      gameView.setDirection(direction);
       gameView.setTiles(gameTiles);
     }
   }
 
   @Override
   public void onSaveInstanceState(Bundle savedInstanceState) {
+    savedInstanceState.putInt(STATE_DIRECTION, gameView.getDirection());
     savedInstanceState.putIntArray(STATE_TILES, gameView.getTiles());
+    currentState = currentState == GameState.finished ? GameState.welcome : currentState;
     savedInstanceState.putString(STATE_GAME, currentState.toString());
     super.onSaveInstanceState(savedInstanceState);
   }
@@ -98,18 +99,6 @@ public class GameActivity extends AppCompatActivity {
     switchState(currentState);
   }
 
-  private void showWelcomeDialog() {
-    welcomeScreen.setVisibility(View.VISIBLE);
-  }
-
-  private void showResultsDialog() {
-  }
-
-  private void showGameDialog() {
-    Log.i(TAG, "showGameDialog after: ");
-    gameScreen.setVisibility(View.VISIBLE);
-  }
-
   @Override
   public void onBackPressed() {
     Log.i(TAG, "onBackPressed: true");
@@ -118,50 +107,30 @@ public class GameActivity extends AppCompatActivity {
         switchState(GameState.welcome);
         break;
       case welcome:
-        super.onBackPressed();
+        switchState(GameState.finished);
         break;
-      case finished:
+      case results:
+        switchState(GameState.welcome);
         break;
     }
-  }
-
-  public void onGameWon(String str) {
-    switchState(GameState.results);
-  }
-
-  public void onQuitGame(String str) {
-    switchState(GameState.welcome);
-  }
-
-  public void onStartGame(String str) {
-    switchState(GameState.started);
-  }
-
-  public void onExitGame() {
-    switchState(GameState.finished);
   }
 
   private void switchState(GameState state) {
     switch (state) {
       case welcome:
-        //remove game and results fragments
+        resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.GONE);
-        showWelcomeDialog();
+        welcomeScreen.setVisibility(View.VISIBLE);
         break;
       case started:
-        //remove welcome fragment
-        //if from welcome init for new game
-        //if not init from saved state
         welcomeScreen.setVisibility(View.GONE);
-        showGameDialog();
+        resultsScreen.setVisibility(View.GONE);
+        gameScreen.setVisibility(View.VISIBLE);
         break;
       case results:
-        //show results fragment
+        resultsScreen.setVisibility(View.VISIBLE);
         break;
       case finished:
-        //if prevstate started then save tileview
-        //if prevstate welcome then exit
-        //if results go to welcome
         finish();
         break;
     }
