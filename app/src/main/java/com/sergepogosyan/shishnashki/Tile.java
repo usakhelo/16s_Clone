@@ -16,6 +16,16 @@ public class Tile {
   private Rect mRectSrc;
   private int mNumber;
 
+  public boolean isInPlace() {
+    return mIsInPlace;
+  }
+
+  public void setInPlace(boolean mIsInPlace) {
+    this.mIsInPlace = mIsInPlace;
+  }
+
+  public boolean mIsInPlace;
+
   public Rect getRectSrc() {
     return mRectSrc;
   }

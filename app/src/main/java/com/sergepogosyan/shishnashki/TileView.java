@@ -23,12 +23,14 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class TileView extends View {
 
   private int mDirection;
+  private int mDirectionTexture;
   private Rect mButtonRectCW, mButtonRectCCW;
   private int mTileWidth;
   private int mTileMarginRatio = 10;
@@ -37,7 +39,7 @@ public class TileView extends View {
   private ArrayList<Tile> mTiles;
   private ArrayList<RotateButton> mButtons;
 
-  private AnimatorSet moveAnimatorSet;
+  private AnimatorSet moveAnimatorSet, buttonAnimatorSet;
 
   class PointEvaluator implements TypeEvaluator {
     public Object evaluate(float fraction, Object startValue, Object endValue) {
@@ -67,7 +69,6 @@ public class TileView extends View {
   private void init(AttributeSet attrs, int defStyle) {
     final TypedArray a = getContext().obtainStyledAttributes(
         attrs, R.styleable.TileView, defStyle, 0);
-
     a.recycle();
     initTiles();
     initButtons();
@@ -84,6 +85,7 @@ public class TileView extends View {
   public void setTiles(int[] tileNums) {
     for (int i = 0; i < (mTileCount * mTileCount); i++) {
       mTiles.get(i).setNumber(tileNums[i]);
+      mTiles.get(i).setInPlace(mTiles.indexOf(mTiles.get(i)) + 1 == tileNums[i]);
     }
   }
 
@@ -96,15 +98,15 @@ public class TileView extends View {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
-        for (int i = 0; i < (mTileCount * mTileCount); i++) {
-          mTiles.get(i).setNumber(i+1);
-        }
+        animation.removeAllListeners();
+        setTiles(new int[] {1,2,3,4,5,6,7,8,9,10,15,11,13,14,16,12});
         mDirection = 0;
         startAnimation();
       }
     });
     hide.start();
   }
+
   public void shuffleTiles() {
     if (moveAnimatorSet != null && moveAnimatorSet.isRunning())
       return;
@@ -113,15 +115,17 @@ public class TileView extends View {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
+        animation.removeAllListeners();
         ArrayList<Integer> nums = new ArrayList<>();
-
         for (int i = 0; i < (mTileCount * mTileCount); i++) {
           nums.add(i + 1);
         }
         Collections.shuffle(nums);
-        for (int i = 0; i < (mTileCount * mTileCount); i++) {
-          mTiles.get(i).setNumber(nums.get(i));
-        }
+        int[] newNums = new int[nums.size()];
+        for (int i = 0; i < nums.size(); i++)
+          newNums[i] = nums.get(i);
+
+        setTiles(newNums);
         mDirection = 0;
         startAnimation();
       }
@@ -134,6 +138,7 @@ public class TileView extends View {
     Bitmap bitmap = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.tiles);
     for (int i = 0; i < (mTileCount * mTileCount); i++) {
       Tile newTile = new Tile(i + 1, bitmap, this);
+      newTile.setInPlace(true);
       mTiles.add(newTile);
     }
   }
@@ -154,18 +159,27 @@ public class TileView extends View {
     return mDirection;
   }
 
-  public void setDirection(int direction) {
-    final int dir = direction;
+  public void setDirectionAnim(int direction) {
+    if (buttonAnimatorSet != null && buttonAnimatorSet.isRunning())
+      return;
     Animator hide = hideButtonsAnim();
     hide.addListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
-        mDirection = dir;
+        animation.removeAllListeners();
+        mDirectionTexture = 1 - mDirectionTexture; // FIXME: 12/22/2015 this gets confused after Reset or Shuffle
         startButtonsAnimation().start();
       }
     });
+    mDirectionTexture = mDirection;
+    mDirection = direction;
     hide.start();
+  }
+
+  public void setDirection(int direction) {
+    mDirection = direction;
+    mDirectionTexture = mDirection;
   }
 
   @Override
@@ -285,7 +299,7 @@ public class TileView extends View {
       buttonPopOut.setInterpolator(new OvershootInterpolator());
       buttonAnimators.add(buttonPopOut);
     }
-    AnimatorSet buttonAnimatorSet = new AnimatorSet();
+    buttonAnimatorSet = new AnimatorSet();
     buttonAnimatorSet.playTogether(buttonAnimators);
     return buttonAnimatorSet;
   }
@@ -298,68 +312,65 @@ public class TileView extends View {
     moveAnimatorSet.start();
   }
 
-  @Override
-  public boolean onTouchEvent(MotionEvent event) {  //// TODO: 12/10/2015 touchevent should be moved to activity class
-    if (event.getAction() != MotionEvent.ACTION_DOWN) {
-      return false;
-    }
-
-    if (moveAnimatorSet != null && moveAnimatorSet.isRunning()) {
-      return false;
-    }
-
-    float x = event.getX();
-    float y = event.getY();
-
-    //find pressed button
-    //play button press animation
-    //find four tile around the button
-    //play animation of tiles moving to their new places
-    RotateButton pressedButton = null;
+  public RotateButton findButton(float x, float y) {
     for (RotateButton button : mButtons) {
       float butX = button.getPosition().x;
       float butY = button.getPosition().y;
       double squareDistance = Math.pow(butX - x, 2) + Math.pow(butY - y, 2);
       if (squareDistance <= Math.pow(button.getSize() / 2f, 2) ) {
-
-        pressedButton = button;
-
-        float endRot = mDirection == 0 ? 90f : -90f;
-        ObjectAnimator rotation = ObjectAnimator.ofFloat(button, "rotation", 0, endRot);
-        rotation.setDuration(300);
-        rotation.setInterpolator(new DecelerateInterpolator());
-        rotation.start();
+        return button;
       }
     }
+    return null;
+  }
 
-    if (pressedButton != null) {
-      int col = pressedButton.getCol();
-      int row = pressedButton.getRow();
-      int[] tileNumSrc = {
-          (row * mTileCount) + col,
-          (row * mTileCount) + col + 1,
-          ((row + 1) * mTileCount) + col,
-          ((row + 1) * mTileCount) + col + 1};
-      int[] tileNumTrg;
-      tileNumTrg = mDirection == 0 ? rotateCW(tileNumSrc) : rotateCCW(tileNumSrc);
-
-      List<Animator> moveAnimators = new ArrayList<>();
-      for (int i = 0; i < 4; i++) {
-        Point from = mTiles.get(tileNumSrc[i]).getPosition();
-        Point to = mTiles.get(tileNumTrg[i]).getPosition();
-        ObjectAnimator mover = ObjectAnimator.ofObject(mTiles.get(tileNumSrc[i]), "position", new PointEvaluator(), from, to);
-        mover.setDuration(300);
-
-        AnimatorSet move = new AnimatorSet();
-        move.play(mover);
-        moveAnimators.add(move);
-      }
-
-      moveAnimatorSet = new AnimatorSet();
-      moveAnimatorSet.playTogether(moveAnimators);
-      moveAnimatorSet.start();
+  public void pressButton(RotateButton button) {
+    if (button == null)
+      return;
+    if (moveAnimatorSet != null && moveAnimatorSet.isRunning()) {
+      return;
     }
-    return true;
+
+    int col = button.getCol();
+    int row = button.getRow();
+    List<Animator> moveAnimators = new ArrayList<>();
+
+    float endRot = mDirection == 0 ? 90f : -90f;
+    ObjectAnimator rotation = ObjectAnimator.ofFloat(button, "rotation", 0, endRot);
+    rotation.setDuration(300);
+    rotation.setInterpolator(new DecelerateInterpolator());
+    moveAnimators.add(rotation);
+
+    int[] tileNumSrc = {
+        (row * mTileCount) + col,
+        (row * mTileCount) + col + 1,
+        ((row + 1) * mTileCount) + col,
+        ((row + 1) * mTileCount) + col + 1};
+    int[] tileNumTrg;
+    tileNumTrg = mDirection == 0 ? rotateCW(tileNumSrc) : rotateCCW(tileNumSrc);
+
+    for (int i = 0; i < 4; i++) {
+      Point from = mTiles.get(tileNumSrc[i]).getPosition();
+      Point to = mTiles.get(tileNumTrg[i]).getPosition();
+      ObjectAnimator mover = ObjectAnimator.ofObject(mTiles.get(tileNumSrc[i]), "position", new PointEvaluator(), from, to);
+      mover.setDuration(300);
+      mover.addListener(new AnimatorListenerAdapter() {
+        @Override
+        public void onAnimationEnd(Animator animation) {
+          super.onAnimationEnd(animation);
+          animation.removeAllListeners();
+          Tile tile = (Tile)((ObjectAnimator)animation).getTarget();
+          if (tile == null) return;
+          tile.setInPlace(mTiles.indexOf(tile) + 1 == tile.getNumber());
+          postInvalidate();
+        }
+      });
+      moveAnimators.add(mover);
+    }
+
+    moveAnimatorSet = new AnimatorSet();
+    moveAnimatorSet.playTogether(moveAnimators);
+    moveAnimatorSet.start();
   }
 
   private int[] rotateCW(int[] tileNumsSrc) {
@@ -372,6 +383,7 @@ public class TileView extends View {
     mTiles.set(tileNumsSrc[1], temp);
     return tileNumTrg;
   }
+
   private int[] rotateCCW(int[] tileNumsSrc) {
     //New places (src -> target): 0->2, 2->3, 3->1, 1->0
     int[] tileNumTrg = {tileNumsSrc[2], tileNumsSrc[0], tileNumsSrc[3], tileNumsSrc[1]};
@@ -398,8 +410,8 @@ public class TileView extends View {
       canvas.save();
       canvas.translate(xOffset, yOffset);
       Rect rectSrc = tile.getRectSrc();
-      if (mTiles.indexOf(tile) + 1 == tile.getNumber())
-        tile.getRectSrc().offsetTo(rectSrc.left, rectSrc.height()); // TODO: 12/10/2015 change tile color after animation
+      if (tile.isInPlace())
+        tile.getRectSrc().offsetTo(rectSrc.left, rectSrc.height());
       else
         tile.getRectSrc().offsetTo(rectSrc.left, 0);
       canvas.drawBitmap(tile.getBitmap(), rectSrc, rectDst, null);
@@ -416,7 +428,7 @@ public class TileView extends View {
       canvas.save();
       canvas.rotate(button.getRotation(), button.getPosition().x, button.getPosition().y);
       canvas.translate(xOffset, yOffset);
-      if (mDirection == 0) {
+      if (mDirectionTexture == 0) {
         canvas.drawBitmap(button.getBitmap(), mButtonRectCW, rectDst, null);
       } else {
         canvas.drawBitmap(button.getBitmap(), mButtonRectCCW, rectDst, null);

@@ -4,6 +4,7 @@ import android.animation.LayoutTransition;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -50,6 +51,23 @@ public class GameActivity extends AppCompatActivity {
     Button buttonShuffle = (Button) findViewById(R.id.button_shuffle);
     Button startButton = (Button) findViewById(R.id.start_button);
 
+    gameView.setOnTouchListener(new View.OnTouchListener() {
+      @Override
+      public boolean onTouch(View view, MotionEvent event) {
+        if (event.getAction() != MotionEvent.ACTION_DOWN) {
+          return false;
+        }
+        float x = event.getX();
+        float y = event.getY();
+
+        RotateButton pressedButton = gameView.findButton(x, y);
+
+        if (pressedButton != null) {
+          gameView.pressButton(pressedButton);
+        }
+        return true;
+      }
+    });
     startButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
@@ -71,7 +89,7 @@ public class GameActivity extends AppCompatActivity {
     buttonReverse.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        gameView.setDirection(1 - gameView.getDirection());
+        gameView.setDirectionAnim(1 - gameView.getDirection());
       }
     });
 
@@ -123,6 +141,9 @@ public class GameActivity extends AppCompatActivity {
         welcomeScreen.setVisibility(View.VISIBLE);
         break;
       case started:
+        if (currentState == GameState.welcome) {
+          gameView.shuffleTiles();
+        }
         welcomeScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.VISIBLE);
