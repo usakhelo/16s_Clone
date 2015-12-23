@@ -43,7 +43,7 @@ public class GameActivity extends AppCompatActivity {
 
     welcomeScreen = findViewById(R.id.welcome_screen);
     gameScreen = findViewById(R.id.game_screen);
-    resultsScreen = findViewById(R.id.results_screen);
+    resultsScreen = findViewById(R.id.result_screen);
     gameView = (TileView) findViewById(R.id.game_view);
 
     Button buttonReset = (Button) findViewById(R.id.button_reset);
