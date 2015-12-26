@@ -10,4 +10,6 @@
     <string name="time">Time</string>
     <string name="score">Score</string>
     <string name="start">Start!</string>
+    <string name="score_str">0</string>
+    <string name="time_str">0:00</string>
 </resources>

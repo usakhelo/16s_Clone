@@ -10,7 +10,7 @@
         android:layout_height="300dp"
         android:id="@+id/welcome_screen"
         android:layout_centerVertical="true"
-        android:visibility="visible"
+        android:visibility="gone"
         >
 
         <ImageView
@@ -47,17 +47,18 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp"
+        android:layout_alignParentTop="true"
+        android:paddingTop="10dp"
         android:id="@+id/game_screen"
-        android:visibility="gone"
+        android:visibility="visible"
         >
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
+            android:paddingLeft="5dp"
+            android:paddingStart="5dp"
             android:textSize="20sp"
             android:id="@+id/text_score"
             android:text="@string/score"
@@ -65,11 +66,37 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@id/text_score"
+            android:paddingLeft="5dp"
+            android:paddingStart="5dp"
+            android:textSize="40sp"
+            android:id="@+id/score"
+            android:text="@string/score_str"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:textSize="20sp"
+            android:paddingRight="5dp"
+            android:paddingEnd="5dp"
             android:id="@+id/text_time"
             android:text="@string/time"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@id/text_time"
+            android:textSize="40sp"
+            android:paddingRight="5dp"
+            android:paddingEnd="5dp"
+            android:id="@+id/time"
+            android:text="@string/time_str"
             />
         <com.sergepogosyan.shishnashki.TileView
             android:layout_width="match_parent"
@@ -77,7 +104,7 @@
             android:background="#FFF"
             android:padding="10dp"
             android:layout_centerHorizontal="true"
-            android:layout_below="@id/text_time"
+            android:layout_below="@id/score"
             android:id="@+id/game_view"
             />
 
@@ -94,14 +121,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/game_view"
-            android:layout_centerHorizontal="true"
-            android:id="@+id/button_shuffle"
-            android:text="@string/shuffle"
-            />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/game_view"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:id="@+id/button_reverse"
@@ -113,7 +132,7 @@
         android:layout_height="300dp"
         android:id="@+id/result_screen"
         android:layout_centerVertical="true"
-        android:visibility="visible"
+        android:visibility="gone"
         >
 
         <ImageView

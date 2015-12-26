@@ -16,14 +16,12 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,6 +40,11 @@ public class TileView extends View {
   private ArrayList<RotateButton> mButtons;
 
   private AnimatorSet moveAnimatorSet, buttonAnimatorSet;
+  private OnTurnListener mOnTurnListener;
+
+  public interface OnTurnListener {
+    void onTurn();
+  }
 
   class PointEvaluator implements TypeEvaluator {
     public Object evaluate(float fraction, Object startValue, Object endValue) {
@@ -198,14 +201,13 @@ public class TileView extends View {
       setMeasuredDimension(h, h);
     else
       setMeasuredDimension(w, w);
-    Log.i("shishanshki: ", "onMeasure: " + w + ", " + h);
+//    Log.i("shishanshki: ", "onMeasure: " + w + ", " + h);
   }
 
   @Override
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     super.onSizeChanged(w, h, oldw, oldh);
 
-    // Account for padding
     int leftPad = getPaddingLeft();
     int topPad = getPaddingTop();
     int xPad = leftPad + getPaddingRight();
@@ -223,8 +225,7 @@ public class TileView extends View {
     for (int i = 0; i < mTileCount; i++) {
       for (int j = 0; j < mTileCount; j++) {
         Tile tile = mTiles.get((i * mTileCount) + j);
-        if (!this.isInEditMode())
-          tile.setSize(0);
+        tile.setSize(mTileWidth);
         int x = leftPad + (tilePlaceW * j) + (tilePlaceW / 2);
         int y = topPad + (tilePlaceH * i) + (tilePlaceH / 2);
         tile.setPosition(new Point(x, y));
@@ -236,14 +237,12 @@ public class TileView extends View {
     for (int i = 0; i < buttonCount; i++) {
       for (int j = 0; j < buttonCount; j++) {
         RotateButton button = mButtons.get((i * buttonCount) + j);
-        if (!this.isInEditMode())
-          button.setSize(0);
+        button.setSize((mTileWidth / mButtonSizeRatio));
         int x = leftPad + tilePlaceW + (tilePlaceW * j);
         int y = topPad + tilePlaceH + (tilePlaceH * i);
         button.setPosition(new Point(x, y));
       }
     }
-//    startAnimation(); // TODO: 12/22/2015 run this only on actual sizechange (rotate screen)
   }
 
   private Animator hideTilesAnim() {
@@ -382,11 +381,16 @@ public class TileView extends View {
         super.onAnimationEnd(animation);
         animation.removeAllListeners();
         postInvalidate();
-        // TODO: 12/23/2015 check for win position here
+        mOnTurnListener.onTurn();
+        // TODO: 12/23/2015 check for wining position here
         // TODO: 12/23/2015 increase score (turn amout) here
       }
     });
     moveAnimatorSet.start();
+  }
+
+  public void setOnTurnListener(OnTurnListener listener) {
+    this.mOnTurnListener = listener;
   }
 
   private int[] rotateCW(int[] tileNumsSrc) {
