@@ -2,6 +2,7 @@ package com.sergepogosyan.shishnashki;
 
 import android.animation.LayoutTransition;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.TimeUtils;
@@ -12,6 +13,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GameActivity extends AppCompatActivity {
 
@@ -26,7 +29,9 @@ public class GameActivity extends AppCompatActivity {
   private GameState currentState;
   private int[] gameTiles;
   private TileView gameView;
-
+  private Handler mHandler;
+  private Timer mTimer;
+  private TimerTask mTimerTask;
   private View welcomeScreen, gameScreen, resultsScreen;
   private TextView scoreView, timeView;
   private ViewGroup container;
@@ -56,6 +61,9 @@ public class GameActivity extends AppCompatActivity {
     gameView = (TileView) findViewById(R.id.game_view);
     scoreView = (TextView) findViewById(R.id.score);
     timeView = (TextView) findViewById(R.id.time);
+
+    mTimer = new Timer();
+    mHandler = new Handler();
 
     Button buttonReset = (Button) findViewById(R.id.button_reset);
     Button buttonReverse = (Button) findViewById(R.id.button_reverse);
@@ -166,19 +174,38 @@ public class GameActivity extends AppCompatActivity {
   private void switchState(GameState state) {
     switch (state) {
       case welcome:
+        score = 0;
+        time = 0;
         resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.GONE);
         welcomeScreen.setVisibility(View.VISIBLE);
         break;
       case started:
         if (currentState == GameState.welcome || currentState == GameState.results) {
-          score = 0;
-          time = 100;
-          Date date = new Date();
-          date.setTime(time * 1000);
-          String timeStr = String.format("%1$tM:%1$tS", date);
+          // kick off the timer task for counter update if not already
+          // initialized
+          if (mTimerTask == null) {
+            mTimerTask = new TimerTask() {
+              public void run() {
+                mHandler.post(new Runnable() {
+                  @Override
+                  public void run() {
+                    time += 1;
+                    int minutes = time / 60;
+                    int secs = time % 60;
+                    String timeStr = String.format("%1$d:%2$d", minutes, secs);
+                    timeView.setText(timeStr);
+                  }
+                });
+              }
+            };
+
+            mTimer.scheduleAtFixedRate(mTimerTask, 1000L, 1000L);
+
+          }
+
           scoreView.setText(String.valueOf(score));
-          timeView.setText(timeStr);
+          timeView.setText("0:00");
           gameView.shuffleTiles();
         }
         welcomeScreen.setVisibility(View.GONE);
@@ -186,6 +213,8 @@ public class GameActivity extends AppCompatActivity {
         gameScreen.setVisibility(View.VISIBLE);
         break;
       case results:
+        mTimerTask.cancel();
+        mTimerTask = null;
         gameScreen.setEnabled(false);
         gameScreen.setClickable(false);
         resultsScreen.setVisibility(View.VISIBLE);
