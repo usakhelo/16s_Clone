@@ -32,6 +32,7 @@ public class GameActivity extends AppCompatActivity {
   private Handler mHandler;
   private Timer mTimer;
   private TimerTask mTimerTask;
+  private Runnable mRunnable;
   private View welcomeScreen, gameScreen, resultsScreen;
   private TextView scoreView, timeView;
   private ViewGroup container;
@@ -107,18 +108,21 @@ public class GameActivity extends AppCompatActivity {
     restartButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
+        initGame();
         switchState(GameState.started);
       }
     });
     startButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
+        initGame();
         switchState(GameState.started);
       }
     });
     buttonReset.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
+        score = 90;
         gameView.resetTiles();
       }
     });
@@ -130,6 +134,8 @@ public class GameActivity extends AppCompatActivity {
     });
 
     if (savedInstanceState != null) {
+      time = savedInstanceState.getInt(STATE_TIME, 0);
+      score = savedInstanceState.getInt(STATE_SCORE, 0);
       currentState = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
       gameTiles = savedInstanceState.getIntArray(STATE_TILES);
       int direction = savedInstanceState.getInt(STATE_DIRECTION);
@@ -146,13 +152,22 @@ public class GameActivity extends AppCompatActivity {
     savedInstanceState.putIntArray(STATE_TILES, gameView.getTiles());
     currentState = currentState == GameState.results ? GameState.welcome : currentState;
     savedInstanceState.putString(STATE_GAME, currentState.toString());
+    Log.i(TAG, "onSaveInstanceState: " + savedInstanceState);
     super.onSaveInstanceState(savedInstanceState);
   }
 
   @Override
   protected void onStart() {
     super.onStart();
+    Log.i(TAG, "onStart: ");
     switchState(currentState);
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    Log.i(TAG, "onStop: ");
+    stopTimer();
   }
 
   @Override
@@ -160,6 +175,7 @@ public class GameActivity extends AppCompatActivity {
     Log.i(TAG, "onBackPressed: true");
     switch (currentState) {
       case started:
+        stopTimer();
         switchState(GameState.welcome);
         break;
       case welcome:
@@ -171,52 +187,66 @@ public class GameActivity extends AppCompatActivity {
     }
   }
 
+  private void printTime() {
+    int minutes = time / 60;
+    int secs = time % 60;
+    String timeStr = String.format("%1$d:%2$02d", minutes, secs);
+    timeView.setText(timeStr);
+  }
+
+  private void initTimer() {
+    if (mRunnable == null) {
+      mRunnable = new Runnable() {
+        @Override
+        public void run() {
+          time += 1;
+          printTime();
+        }
+      };
+    }
+
+    if (mTimerTask == null) {
+      mTimerTask = new TimerTask() {
+        public void run() {
+          mHandler.post(mRunnable);
+        }
+      };
+    }
+  }
+
+  private void stopTimer() {
+    if (mTimerTask != null) {
+      mTimerTask.cancel();
+      mTimerTask = null;
+    }
+  }
+
+  private void initGame() {
+    score = 0;
+    time = 0;
+    gameView.shuffleTiles();
+  }
+
   private void switchState(GameState state) {
+    Log.i(TAG, "switchState: " + state.toString());
     switch (state) {
       case welcome:
-        score = 0;
-        time = 0;
+        stopTimer();
         resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.GONE);
         welcomeScreen.setVisibility(View.VISIBLE);
         break;
       case started:
-        if (currentState == GameState.welcome || currentState == GameState.results) {
-          // kick off the timer task for counter update if not already
-          // initialized
-          if (mTimerTask == null) {
-            mTimerTask = new TimerTask() {
-              public void run() {
-                mHandler.post(new Runnable() {
-                  @Override
-                  public void run() {
-                    time += 1;
-                    int minutes = time / 60;
-                    int secs = time % 60;
-                    String timeStr = String.format("%1$d:%2$d", minutes, secs);
-                    timeView.setText(timeStr);
-                  }
-                });
-              }
-            };
-
-            mTimer.scheduleAtFixedRate(mTimerTask, 1000L, 1000L);
-
-          }
-
-          scoreView.setText(String.valueOf(score));
-          timeView.setText("0:00");
-          gameView.shuffleTiles();
-        }
+        initTimer();
+        printTime();
+        scoreView.setText(String.valueOf(score));
+        mTimer.scheduleAtFixedRate(mTimerTask, 1000L, 1000L);
         welcomeScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.VISIBLE);
         break;
       case results:
-        mTimerTask.cancel();
-        mTimerTask = null;
-        gameScreen.setEnabled(false);
-        gameScreen.setClickable(false);
+        stopTimer();
         resultsScreen.setVisibility(View.VISIBLE);
         break;
       case finished:

@@ -22,6 +22,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -105,7 +106,7 @@ public class TileView extends View {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
-        animation.removeAllListeners();
+//        animation.removeAllListeners();
         setTiles(new int[] {1,2,3,4,5,6,7,8,9,10,15,11,13,14,16,12});
         mDirection = mDirectionTexture = 0;
         startAnimation();
@@ -116,16 +117,16 @@ public class TileView extends View {
 
   public void shuffleTiles() {
     if (moveAnimatorSet != null && moveAnimatorSet.isRunning()) {
-      Log.i(TAG, "shuffleTiles: " + moveAnimatorSet);
+      Log.i(TAG, "shuffleTiles1: " + moveAnimatorSet);
       return;
     }
 
     Animator hide = hideAnimation();
+//    hide.removeAllListeners();
     hide.addListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
-        animation.removeAllListeners();
         ArrayList<Integer> nums = new ArrayList<>();
         for (int i = 0; i < (mTileCount * mTileCount); i++) {
           nums.add(i + 1);
@@ -138,9 +139,11 @@ public class TileView extends View {
         setTiles(newNums);
         mDirection = mDirectionTexture = 0;
         startAnimation();
+        Log.i(TAG, "shuffleTiles3: " + moveAnimatorSet);
       }
     });
     hide.start();
+    Log.i(TAG, "shuffleTiles2: " + moveAnimatorSet);
   }
 
   public void initTiles() {
@@ -173,11 +176,11 @@ public class TileView extends View {
     if (buttonAnimatorSet != null && buttonAnimatorSet.isRunning())
       return;
     Animator hide = hideButtonsAnim();
+//    hide.removeAllListeners();
     hide.addListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
-        animation.removeAllListeners();
         mDirectionTexture = 1 - mDirectionTexture;
         startButtonsAnimation().start();
       }
@@ -201,7 +204,7 @@ public class TileView extends View {
       setMeasuredDimension(h, h);
     else
       setMeasuredDimension(w, w);
-//    Log.i("shishanshki: ", "onMeasure: " + w + ", " + h);
+//    Log.i(TAG, "onMeasure: " + w + ", " + h);
   }
 
   @Override
@@ -360,11 +363,11 @@ public class TileView extends View {
       Point to = mTiles.get(tileNumTrg[i]).getPosition();
       ObjectAnimator mover = ObjectAnimator.ofObject(mTiles.get(tileNumSrc[i]), "position", new PointEvaluator(), from, to);
       mover.setDuration(300);
+//      mover.removeAllListeners();
       mover.addListener(new AnimatorListenerAdapter() {
         @Override
         public void onAnimationEnd(Animator animation) {
           super.onAnimationEnd(animation);
-          animation.removeAllListeners();
           Tile tile = (Tile)((ObjectAnimator)animation).getTarget();
           if (tile == null) return;
           tile.setInPlace(mTiles.indexOf(tile) + 1 == tile.getNumber());
@@ -375,15 +378,14 @@ public class TileView extends View {
 
     moveAnimatorSet = new AnimatorSet();
     moveAnimatorSet.playTogether(moveAnimators);
+//    moveAnimatorSet.removeAllListeners();
     moveAnimatorSet.addListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
-        animation.removeAllListeners();
         postInvalidate();
         mOnTurnListener.onTurn();
-        // TODO: 12/23/2015 check for wining position here
-        // TODO: 12/23/2015 increase score (turn amout) here
+        Log.i(TAG, "onAnimationEnd:");
       }
     });
     moveAnimatorSet.start();
