@@ -50,7 +50,7 @@
         android:layout_alignParentTop="true"
         android:paddingTop="10dp"
         android:id="@+id/game_screen"
-        android:visibility="visible"
+        android:visibility="gone"
         >
         <TextView
             android:layout_width="wrap_content"

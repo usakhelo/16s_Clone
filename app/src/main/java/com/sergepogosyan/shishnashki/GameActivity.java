@@ -38,10 +38,11 @@ public class GameActivity extends AppCompatActivity {
   private ViewGroup container;
 
   private int time, score;
-  // TODO: 12/10/2015 add welcome screen - start button, description, "like" button
-  // TODO: 12/10/2015 add results screen - restart button, scoreView
-  // TODO: 12/10/2015 implement scoreView and timeView
+  // TODO: 12/10/2015 add to welcome screen - "like" button
+  // TODO: 12/10/2015 add to results screen - scoreView
   // TODO: 12/10/2015 implement hints and solution algorithm
+  // TODO: 1/8/2016 add hightscore panel
+  // TODO: 1/8/2016 add custom animation to views
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -122,7 +123,6 @@ public class GameActivity extends AppCompatActivity {
     buttonReset.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        score = 90;
         gameView.resetTiles();
       }
     });
@@ -161,6 +161,22 @@ public class GameActivity extends AppCompatActivity {
     super.onStart();
     Log.i(TAG, "onStart: ");
     switchState(currentState);
+  }
+
+
+  @Override
+  public void onWindowFocusChanged(boolean hasFocus) {
+    super.onWindowFocusChanged(hasFocus);
+    if (hasFocus) {
+      if (currentState == GameState.started) {
+        initTimer();
+        printTime();
+        mTimer.scheduleAtFixedRate(mTimerTask, 1000L, 1000L);
+      }
+    }
+    else
+      stopTimer();
+    Log.i(TAG, "onWindowFocusChanged: " + hasFocus);
   }
 
   @Override
@@ -237,10 +253,12 @@ public class GameActivity extends AppCompatActivity {
         welcomeScreen.setVisibility(View.VISIBLE);
         break;
       case started:
-        initTimer();
-        printTime();
+        if (hasWindowFocus()) {
+          initTimer();
+          printTime();
+          mTimer.scheduleAtFixedRate(mTimerTask, 1000L, 1000L);
+        }
         scoreView.setText(String.valueOf(score));
-        mTimer.scheduleAtFixedRate(mTimerTask, 1000L, 1000L);
         welcomeScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.VISIBLE);
