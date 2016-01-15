@@ -173,5 +173,24 @@
             android:textSize="30sp"
             android:text="@string/play_again"/>
     </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/highscore_screen"
+        android:background="#80000000"
+        android:visibility="visible"
+        android:clickable="true"
+        >
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:textColor="@android:color/white"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/dialog_rect01"
+            android:id="@+id/highscore_list"/>
+    </RelativeLayout>
+
 
 </RelativeLayout>

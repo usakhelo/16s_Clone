@@ -1,20 +1,27 @@
 package com.sergepogosyan.shishnashki;
 
 import android.animation.LayoutTransition;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.util.TimeUtils;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-import java.util.Date;
+import com.sergepogosyan.shishnashki.db.DbOpenHelper;
+import com.sergepogosyan.shishnashki.db.Player;
+
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 public class GameActivity extends AppCompatActivity {
 
@@ -25,15 +32,17 @@ public class GameActivity extends AppCompatActivity {
   static final String STATE_SCORE = "score";
   static final String STATE_TIME = "time";
 
-  enum GameState {welcome, started, results, finished}
+  enum GameState {welcome, started, results, highscore, finished}
   private GameState currentState;
   private int[] gameTiles;
   private TileView gameView;
   private Handler mHandler;
   private Timer mTimer;
   private TimerTask mTimerTask;
+  private DbOpenHelper mDbHelper;
   private Runnable mRunnable;
-  private View welcomeScreen, gameScreen, resultsScreen;
+  private ListView highscoreList;
+  private View welcomeScreen, gameScreen, highscoreScreen, resultsScreen;
   private TextView scoreView, timeView;
   private ViewGroup container;
 
@@ -60,6 +69,8 @@ public class GameActivity extends AppCompatActivity {
     welcomeScreen = findViewById(R.id.welcome_screen);
     gameScreen = findViewById(R.id.game_screen);
     resultsScreen = findViewById(R.id.result_screen);
+    highscoreScreen = findViewById(R.id.highscore_screen);
+    highscoreList = (ListView) findViewById(R.id.highscore_list);
     gameView = (TileView) findViewById(R.id.game_view);
     scoreView = (TextView) findViewById(R.id.score);
     timeView = (TextView) findViewById(R.id.time);
@@ -85,7 +96,8 @@ public class GameActivity extends AppCompatActivity {
           prev = i;
         }
         if (prev == 16) { // FIXME: 12/23/2015 tileview size should be accessible and settable from the activity
-          switchState(GameState.results);
+//          switchState(GameState.results);
+          switchState(GameState.highscore);
         }
       }
     });
@@ -200,6 +212,9 @@ public class GameActivity extends AppCompatActivity {
       case results:
         switchState(GameState.welcome);
         break;
+      case highscore:
+        switchState(GameState.welcome);
+        break;
     }
   }
 
@@ -243,11 +258,34 @@ public class GameActivity extends AppCompatActivity {
     gameView.shuffleTiles();
   }
 
+  private void putPlayerDB() {
+    if (mDbHelper == null)
+      mDbHelper = new DbOpenHelper(this);
+    SQLiteDatabase db = mDbHelper.getWritableDatabase();
+    Player player = Player.newPlayer("test1", score, time);
+    cupboard().withDatabase(db).put(player);
+  }
+
+  private void fillHighscores() {
+    if (mDbHelper == null)
+      mDbHelper = new DbOpenHelper(this);
+    SQLiteDatabase db = mDbHelper.getReadableDatabase();
+    Cursor playerCursor = cupboard().withDatabase(db).query(Player.class).getCursor();
+
+    String[] fromColumns = {"name", "score", "time"};
+    int[] toViews = {R.id.player_name, R.id.player_score, R.id.player_time};
+
+    SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
+        R.layout.list_item, playerCursor, fromColumns, toViews, 0);
+    highscoreList.setAdapter(adapter);
+  }
+
   private void switchState(GameState state) {
     Log.i(TAG, "switchState: " + state.toString());
     switch (state) {
       case welcome:
         stopTimer();
+        highscoreScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.GONE);
         welcomeScreen.setVisibility(View.VISIBLE);
@@ -260,12 +298,19 @@ public class GameActivity extends AppCompatActivity {
         }
         scoreView.setText(String.valueOf(score));
         welcomeScreen.setVisibility(View.GONE);
+        highscoreScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.VISIBLE);
         break;
       case results:
         stopTimer();
         resultsScreen.setVisibility(View.VISIBLE);
+        break;
+      case highscore:
+        stopTimer();
+        putPlayerDB();
+        fillHighscores();
+        highscoreScreen.setVisibility(View.VISIBLE);
         break;
       case finished:
         finish();
