@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -106,7 +107,6 @@ public class TileView extends View {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
-//        animation.removeAllListeners();
         setTiles(new int[] {1,2,3,4,5,6,7,8,9,10,15,11,13,14,16,12});
         mDirection = mDirectionTexture = 0;
         startAnimation();
@@ -139,11 +139,11 @@ public class TileView extends View {
         setTiles(newNums);
         mDirection = mDirectionTexture = 0;
         startAnimation();
-        Log.i(TAG, "shuffleTiles3: " + moveAnimatorSet);
+//        Log.i(TAG, "shuffleTiles3: " + moveAnimatorSet);
       }
     });
     hide.start();
-    Log.i(TAG, "shuffleTiles2: " + moveAnimatorSet);
+//    Log.i(TAG, "shuffleTiles2: " + moveAnimatorSet);
   }
 
   public void initTiles() {
@@ -363,7 +363,6 @@ public class TileView extends View {
       Point to = mTiles.get(tileNumTrg[i]).getPosition();
       ObjectAnimator mover = ObjectAnimator.ofObject(mTiles.get(tileNumSrc[i]), "position", new PointEvaluator(), from, to);
       mover.setDuration(300);
-//      mover.removeAllListeners();
       mover.addListener(new AnimatorListenerAdapter() {
         @Override
         public void onAnimationEnd(Animator animation) {
@@ -378,7 +377,6 @@ public class TileView extends View {
 
     moveAnimatorSet = new AnimatorSet();
     moveAnimatorSet.playTogether(moveAnimators);
-//    moveAnimatorSet.removeAllListeners();
     moveAnimatorSet.addListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {

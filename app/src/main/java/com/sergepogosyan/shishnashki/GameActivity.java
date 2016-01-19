@@ -113,6 +113,7 @@ public class GameActivity extends AppCompatActivity {
         RotateButton pressedButton = gameView.findButton(x, y);
 
         if (pressedButton != null) {
+          // TODO: 1/19/2016 this command should go to custom message queue which will be handled by tileview class
           gameView.pressButton(pressedButton);
         }
         return true;
@@ -141,6 +142,7 @@ public class GameActivity extends AppCompatActivity {
     buttonReverse.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
+        // TODO: 1/19/2016 this command should go to custom message queue which will be handled by tileview class
         gameView.setDirectionAnim(1 - gameView.getDirection());
       }
     });

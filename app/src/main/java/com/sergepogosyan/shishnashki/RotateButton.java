@@ -5,9 +5,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.View;
 
 public class RotateButton {
+
+  private static final String TAG = "shishnashki Button";
+  private static int mNum = 0;
+
   private Point mPosition;
 
   private float mRotation;
@@ -42,7 +47,12 @@ public class RotateButton {
 
   public void setSize(float size) {
     mSize = size;
-    mView.postInvalidate();
+
+    //only invalidate after setting size for 9 buttons
+    if (++mNum == 8) {
+      mView.postInvalidate();
+      mNum = 0;
+    }
   }
 
   public float getRotation() {

@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.View;
 
 public class Tile {
+
+  static private int mNum = 0;
   private Point mPosition;
   private float mSize;
   private View mView;
@@ -60,7 +62,12 @@ public class Tile {
   }
   public void setSize(int size) {
     mSize = size;
-    mView.postInvalidate(); // TODO: 12/10/2015 minimize invalidate calls amount
+
+    //only invalidate after setting size for 16 tiles
+    if (++mNum == 15) {
+      mView.postInvalidate();
+      mNum = 0;
+    }
   }
 
   public Bitmap getBitmap() {
