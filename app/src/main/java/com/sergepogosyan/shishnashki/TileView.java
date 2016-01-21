@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.TypeEvaluator;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -23,9 +22,9 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class TileView extends View {
 
@@ -40,6 +39,7 @@ public class TileView extends View {
   private int mTileCount = 4;
   private ArrayList<Tile> mTiles;
   private ArrayList<RotateButton> mButtons;
+  private ConcurrentLinkedQueue<GameCommand> commandQueue = new ConcurrentLinkedQueue<>();
 
   private AnimatorSet moveAnimatorSet, buttonAnimatorSet;
   private OnTurnListener mOnTurnListener;
@@ -48,13 +48,17 @@ public class TileView extends View {
     void onTurn();
   }
 
+  public interface GameCommand {
+    void doCommand();
+  }
+
   class PointEvaluator implements TypeEvaluator {
     public Object evaluate(float fraction, Object startValue, Object endValue) {
       Point startPoint = (Point) startValue;
       Point endPoint = (Point) endValue;
       float x = startPoint.x + fraction * (endPoint.x - startPoint.x);
       float y = startPoint.y + fraction * (endPoint.y - startPoint.y);
-      return new Point((int)x, (int)y);
+      return new Point((int)x, (int)y); // TODO: 1/20/2016 need to get rid of object creation
     }
   }
 
@@ -79,6 +83,14 @@ public class TileView extends View {
     a.recycle();
     initTiles();
     initButtons();
+  }
+
+  public void addCommand(GameCommand cmd) {
+    commandQueue.offer(cmd);
+//    if (buttonAnimatorSet != null && buttonAnimatorSet.isRunning())
+    if (moveAnimatorSet == null || !moveAnimatorSet.isRunning()) {
+      commandQueue.poll().doCommand();
+    }
   }
 
   public int[] getTiles() {
@@ -173,16 +185,15 @@ public class TileView extends View {
   }
 
   public void setDirectionAnim(int direction) {
-    if (buttonAnimatorSet != null && buttonAnimatorSet.isRunning())
-      return;
     Animator hide = hideButtonsAnim();
-//    hide.removeAllListeners();
     hide.addListener(new AnimatorListenerAdapter() {
       @Override
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
         mDirectionTexture = 1 - mDirectionTexture;
         startButtonsAnimation().start();
+        if (!commandQueue.isEmpty())
+          commandQueue.poll().doCommand();
       }
     });
     mDirectionTexture = mDirection;
@@ -336,9 +347,6 @@ public class TileView extends View {
   public void pressButton(RotateButton button) {
     if (button == null)
       return;
-    if (moveAnimatorSet != null && moveAnimatorSet.isRunning()) {
-      return;
-    }
 
     int col = button.getCol();
     int row = button.getRow();
@@ -384,6 +392,8 @@ public class TileView extends View {
         postInvalidate();
         mOnTurnListener.onTurn();
         Log.i(TAG, "onAnimationEnd:");
+        if (!commandQueue.isEmpty())
+          commandQueue.poll().doCommand();
       }
     });
     moveAnimatorSet.start();

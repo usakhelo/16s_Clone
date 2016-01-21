@@ -1,6 +1,11 @@
 package com.sergepogosyan.shishnashki;
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
 import android.animation.LayoutTransition;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -45,6 +50,7 @@ public class GameActivity extends AppCompatActivity {
   private View welcomeScreen, gameScreen, highscoreScreen, resultsScreen;
   private TextView scoreView, timeView;
   private ViewGroup container;
+  private Button hintButton;
 
   private int time, score;
   // TODO: 12/10/2015 add to welcome screen - "like" button
@@ -66,8 +72,13 @@ public class GameActivity extends AppCompatActivity {
     LayoutTransition transitioner = new LayoutTransition();
     container.setLayoutTransition(transitioner);
 
-    welcomeScreen = findViewById(R.id.welcome_screen);
     gameScreen = findViewById(R.id.game_screen);
+
+    transitioner = new LayoutTransition();
+    transitioner.setAnimator(LayoutTransition.APPEARING, getButtonAnim(transitioner));
+    ((ViewGroup)gameScreen).setLayoutTransition(transitioner);
+
+    welcomeScreen = findViewById(R.id.welcome_screen);
     resultsScreen = findViewById(R.id.result_screen);
     highscoreScreen = findViewById(R.id.highscore_screen);
     highscoreList = (ListView) findViewById(R.id.highscore_list);
@@ -82,6 +93,8 @@ public class GameActivity extends AppCompatActivity {
     Button buttonReverse = (Button) findViewById(R.id.button_reverse);
     Button startButton = (Button) findViewById(R.id.start_button);
     Button restartButton = (Button) findViewById(R.id.restart_button);
+    hintButton = (Button) findViewById(R.id.button_hint);
+
 
     gameView.setOnTurnListener(new TileView.OnTurnListener() {
       @Override
@@ -94,6 +107,10 @@ public class GameActivity extends AppCompatActivity {
           if (i - prev != 1)
             break;
           prev = i;
+        }
+        if (prev == 8) {
+          // TODO: 1/20/2016 check for hint here
+          hintButton.setVisibility(View.VISIBLE);
         }
         if (prev == 16) { // FIXME: 12/23/2015 tileview size should be accessible and settable from the activity
 //          switchState(GameState.results);
@@ -110,11 +127,15 @@ public class GameActivity extends AppCompatActivity {
         float x = event.getX();
         float y = event.getY();
 
-        RotateButton pressedButton = gameView.findButton(x, y);
+        final RotateButton pressedButton = gameView.findButton(x, y);
 
         if (pressedButton != null) {
-          // TODO: 1/19/2016 this command should go to custom message queue which will be handled by tileview class
-          gameView.pressButton(pressedButton);
+          gameView.addCommand(new TileView.GameCommand() {
+            @Override
+            public void doCommand() {
+              gameView.pressButton(pressedButton);
+            }
+          });
         }
         return true;
       }
@@ -142,8 +163,13 @@ public class GameActivity extends AppCompatActivity {
     buttonReverse.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        // TODO: 1/19/2016 this command should go to custom message queue which will be handled by tileview class
-        gameView.setDirectionAnim(1 - gameView.getDirection());
+        gameView.addCommand(new TileView.GameCommand() {
+          @Override
+          public void doCommand() {
+            gameView.setDirectionAnim(1 - gameView.getDirection());
+          }
+        });
+
       }
     });
 
@@ -156,6 +182,16 @@ public class GameActivity extends AppCompatActivity {
       gameView.setDirection(direction);
       gameView.setTiles(gameTiles);
     }
+  }
+
+  private Animator getButtonAnim(LayoutTransition transition) {
+    PropertyValuesHolder pvhScaleX = PropertyValuesHolder.ofFloat("scaleX", 2f, 1f);
+    PropertyValuesHolder pvhScaleY = PropertyValuesHolder.ofFloat("scaleY", 2f, 1f);
+    PropertyValuesHolder pvhAlpha = PropertyValuesHolder.ofFloat("alpha", 0f, .75f, 1f);
+    PropertyValuesHolder pvhTranslY = PropertyValuesHolder.ofFloat("translationY", -800f, 0f);
+    Animator anim = ObjectAnimator.ofPropertyValuesHolder(transition, pvhAlpha, pvhTranslY, pvhScaleX, pvhScaleY).
+      setDuration(600);
+    return anim;
   }
 
   @Override
@@ -302,6 +338,7 @@ public class GameActivity extends AppCompatActivity {
         welcomeScreen.setVisibility(View.GONE);
         highscoreScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
+        hintButton.setVisibility(View.GONE);
         gameScreen.setVisibility(View.VISIBLE);
         break;
       case results:

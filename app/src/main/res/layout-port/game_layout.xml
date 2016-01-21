@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/container"
+    android:animateLayoutChanges="true"
     >
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -50,7 +51,8 @@
         android:layout_alignParentTop="true"
         android:paddingTop="10dp"
         android:id="@+id/game_screen"
-        android:visibility="gone"
+        android:visibility="visible"
+        android:animateLayoutChanges="true"
         >
         <TextView
             android:layout_width="wrap_content"
@@ -127,6 +129,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/game_view"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/button_hint"
+            android:text="@string/hint"
+            android:visibility="gone"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/game_view"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:id="@+id/button_reverse"
@@ -178,7 +189,7 @@
         android:layout_height="match_parent"
         android:id="@+id/highscore_screen"
         android:background="#80000000"
-        android:visibility="visible"
+        android:visibility="gone"
         android:clickable="true"
         >
         <ListView
