@@ -11,8 +11,9 @@ import android.view.View;
 public class Tile {
 
   static private int mNum = 0;
-  private Point mPosition;
   private float mSize;
+  private float mPositionX;
+  private float mPositionY;
   private View mView;
   private Bitmap mBitmap;
   private Rect mRectSrc;
@@ -50,11 +51,17 @@ public class Tile {
       Log.e("shishnashki", "bitmap is not set to tile#: " + num);
   }
 
-  public Point getPosition() {
-    return mPosition;
+  public Float getPositionX() {
+    return mPositionX;
   }
-  public void setPosition(Point position) {
-    this.mPosition = position;
+  public Float getPositionY() {
+    return mPositionY;
+  }
+  public void setPositionX(float position) {
+    this.mPositionX = position;
+  }
+  public void setPositionY(float position) {
+    this.mPositionY = position;
     mView.postInvalidate();
   }
   public int getSize() {

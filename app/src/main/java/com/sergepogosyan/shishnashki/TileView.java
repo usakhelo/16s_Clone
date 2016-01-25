@@ -4,7 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.animation.TypeEvaluator;
+import android.animation.PropertyValuesHolder;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -37,6 +37,7 @@ public class TileView extends View {
   private int mTileMarginRatio = 10;
   private int mButtonSizeRatio = 2;
   private int mTileCount = 4;
+  private boolean mInEditMode;
   private ArrayList<Tile> mTiles;
   private ArrayList<RotateButton> mButtons;
   private ConcurrentLinkedQueue<GameCommand> commandQueue = new ConcurrentLinkedQueue<>();
@@ -52,28 +53,21 @@ public class TileView extends View {
     void doCommand();
   }
 
-  class PointEvaluator implements TypeEvaluator {
-    public Object evaluate(float fraction, Object startValue, Object endValue) {
-      Point startPoint = (Point) startValue;
-      Point endPoint = (Point) endValue;
-      float x = startPoint.x + fraction * (endPoint.x - startPoint.x);
-      float y = startPoint.y + fraction * (endPoint.y - startPoint.y);
-      return new Point((int)x, (int)y); // TODO: 1/20/2016 need to get rid of object creation
-    }
-  }
-
   public TileView(Context context) {
     super(context);
+    mInEditMode = isInEditMode();
     init(null, 0);
   }
 
   public TileView(Context context, AttributeSet attrs) {
     super(context, attrs);
+    mInEditMode = isInEditMode();
     init(attrs, 0);
   }
 
   public TileView(Context context, AttributeSet attrs, int defStyle) {
     super(context, attrs, defStyle);
+    mInEditMode = isInEditMode();
     init(attrs, defStyle);
   }
 
@@ -113,49 +107,37 @@ public class TileView extends View {
       Log.i(TAG, "resetTiles: " + moveAnimatorSet);
       return;
     }
-
-    Animator hide = hideAnimation();
-    hide.addListener(new AnimatorListenerAdapter() {
-      @Override
-      public void onAnimationEnd(Animator animation) {
-        super.onAnimationEnd(animation);
-        setTiles(new int[] {1,2,3,4,5,6,7,8,9,10,15,11,13,14,16,12});
-        mDirection = mDirectionTexture = 0;
-        startAnimation();
-      }
-    });
-    hide.start();
+    showTiles();
   }
 
-  public void shuffleTiles() {
-    if (moveAnimatorSet != null && moveAnimatorSet.isRunning()) {
-      Log.i(TAG, "shuffleTiles1: " + moveAnimatorSet);
-      return;
+  public void hideTiles() {
+    for (Tile tile :
+        mTiles) {
+      tile.setSize(0);
     }
+    for (RotateButton but :
+        mButtons) {
+      but.setSize(0);
+    }
+  }
 
-    Animator hide = hideAnimation();
-//    hide.removeAllListeners();
-    hide.addListener(new AnimatorListenerAdapter() {
-      @Override
-      public void onAnimationEnd(Animator animation) {
-        super.onAnimationEnd(animation);
-        ArrayList<Integer> nums = new ArrayList<>();
-        for (int i = 0; i < (mTileCount * mTileCount); i++) {
-          nums.add(i + 1);
+  public void showTiles() {
+    //check if tiles are already hidden
+    boolean hidden = mTiles.get(0).getSize() == 0;
+    if (!hidden) {
+      Animator hide = hideAnimation();
+      hide.addListener(new AnimatorListenerAdapter() {
+        @Override
+        public void onAnimationEnd(Animator animation) {
+          super.onAnimationEnd(animation);
+          startAnimation();
         }
-        Collections.shuffle(nums);
-        int[] newNums = new int[nums.size()];
-        for (int i = 0; i < nums.size(); i++)
-          newNums[i] = nums.get(i);
-
-        setTiles(newNums);
-        mDirection = mDirectionTexture = 0;
-        startAnimation();
-//        Log.i(TAG, "shuffleTiles3: " + moveAnimatorSet);
-      }
-    });
-    hide.start();
-//    Log.i(TAG, "shuffleTiles2: " + moveAnimatorSet);
+      });
+      hide.start();
+    }
+    else {
+      startAnimation();
+    }
   }
 
   public void initTiles() {
@@ -239,10 +221,12 @@ public class TileView extends View {
     for (int i = 0; i < mTileCount; i++) {
       for (int j = 0; j < mTileCount; j++) {
         Tile tile = mTiles.get((i * mTileCount) + j);
-        tile.setSize(mTileWidth);
+        if (mInEditMode)
+          tile.setSize(mTileWidth);
         int x = leftPad + (tilePlaceW * j) + (tilePlaceW / 2);
         int y = topPad + (tilePlaceH * i) + (tilePlaceH / 2);
-        tile.setPosition(new Point(x, y));
+        tile.setPositionX(x);
+        tile.setPositionY(y);
       }
     }
 
@@ -251,7 +235,8 @@ public class TileView extends View {
     for (int i = 0; i < buttonCount; i++) {
       for (int j = 0; j < buttonCount; j++) {
         RotateButton button = mButtons.get((i * buttonCount) + j);
-        button.setSize((mTileWidth / mButtonSizeRatio));
+        if (mInEditMode)
+          button.setSize((mTileWidth / mButtonSizeRatio));
         int x = leftPad + tilePlaceW + (tilePlaceW * j);
         int y = topPad + tilePlaceH + (tilePlaceH * i);
         button.setPosition(new Point(x, y));
@@ -367,9 +352,13 @@ public class TileView extends View {
     tileNumTrg = mDirection == 0 ? rotateCW(tileNumSrc) : rotateCCW(tileNumSrc);
 
     for (int i = 0; i < 4; i++) {
-      Point from = mTiles.get(tileNumSrc[i]).getPosition();
-      Point to = mTiles.get(tileNumTrg[i]).getPosition();
-      ObjectAnimator mover = ObjectAnimator.ofObject(mTiles.get(tileNumSrc[i]), "position", new PointEvaluator(), from, to);
+      float fromX = mTiles.get(tileNumSrc[i]).getPositionX();
+      float fromY = mTiles.get(tileNumSrc[i]).getPositionY();
+      float toX = mTiles.get(tileNumTrg[i]).getPositionX();
+      float toY = mTiles.get(tileNumTrg[i]).getPositionY();
+      PropertyValuesHolder pvhPosX = PropertyValuesHolder.ofFloat("positionX", fromX, toX);
+      PropertyValuesHolder pvhPosY = PropertyValuesHolder.ofFloat("positionY", fromY, toY);
+      ObjectAnimator mover = ObjectAnimator.ofPropertyValuesHolder(mTiles.get(tileNumSrc[i]), pvhPosX, pvhPosY);
       mover.setDuration(300);
       mover.addListener(new AnimatorListenerAdapter() {
         @Override
@@ -391,7 +380,7 @@ public class TileView extends View {
         super.onAnimationEnd(animation);
         postInvalidate();
         mOnTurnListener.onTurn();
-        Log.i(TAG, "onAnimationEnd:");
+        Log.i(TAG, "pressButton onAnimationEnd:");
         if (!commandQueue.isEmpty())
           commandQueue.poll().doCommand();
       }
@@ -431,8 +420,8 @@ public class TileView extends View {
     super.onDraw(canvas);
 
     for (Tile tile : mTiles) {
-      float xOffset = tile.getPosition().x - tile.getSize() / 2;
-      float yOffset = tile.getPosition().y - tile.getSize() / 2;
+      float xOffset = tile.getPositionX() - tile.getSize() / 2;
+      float yOffset = tile.getPositionY() - tile.getSize() / 2;
       rectDst.top = 0;
       rectDst.left = 0;
       rectDst.right = tile.getSize();

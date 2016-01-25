@@ -1,8 +1,7 @@
 package com.sergepogosyan.shishnashki;
 
 import android.animation.Animator;
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorSet;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
@@ -20,9 +19,13 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import com.sergepogosyan.shishnashki.solver.Solutions;
 import com.sergepogosyan.shishnashki.db.DbOpenHelper;
 import com.sergepogosyan.shishnashki.db.Player;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -36,6 +39,7 @@ public class GameActivity extends AppCompatActivity {
   static final String STATE_DIRECTION = "direction";
   static final String STATE_SCORE = "score";
   static final String STATE_TIME = "time";
+  static final String STATE_HINT = "hint"; //if hint button was shown
 
   enum GameState {welcome, started, results, highscore, finished}
   private GameState currentState;
@@ -52,12 +56,11 @@ public class GameActivity extends AppCompatActivity {
   private ViewGroup container;
   private Button hintButton;
 
-  private int time, score;
+  private int mTime, mScore;
   // TODO: 12/10/2015 add to welcome screen - "like" button
   // TODO: 12/10/2015 add to results screen - scoreView
   // TODO: 12/10/2015 implement hints and solution algorithm
-  // TODO: 1/8/2016 add hightscore panel
-  // TODO: 1/8/2016 add custom animation to views
+  // TODO: 1/21/2016  complete highscore table
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -70,10 +73,10 @@ public class GameActivity extends AppCompatActivity {
 
     container = (ViewGroup) findViewById(R.id.container);
     LayoutTransition transitioner = new LayoutTransition();
+    transitioner.setAnimator(LayoutTransition.APPEARING, getScreenAnim(transitioner));
     container.setLayoutTransition(transitioner);
 
     gameScreen = findViewById(R.id.game_screen);
-
     transitioner = new LayoutTransition();
     transitioner.setAnimator(LayoutTransition.APPEARING, getButtonAnim(transitioner));
     ((ViewGroup)gameScreen).setLayoutTransition(transitioner);
@@ -95,29 +98,34 @@ public class GameActivity extends AppCompatActivity {
     Button restartButton = (Button) findViewById(R.id.restart_button);
     hintButton = (Button) findViewById(R.id.button_hint);
 
-
     gameView.setOnTurnListener(new TileView.OnTurnListener() {
       @Override
       public void onTurn() {
-        score += 1;
-        scoreView.setText(String.valueOf(score));
+        mScore += 1;
+        scoreView.setText(String.valueOf(mScore));
+
         int[] tiles = gameView.getTiles();
-        int prev = 0;
-        for (int i : tiles) {
-          if (i - prev != 1)
-            break;
-          prev = i;
+        int caseNum = 0;
+        if (isWinningPosition(tiles)) {
+          switchState(GameState.results);
+//          switchState(GameState.highscore);
+        } else if (isFirstHalfComplete(tiles)) {
+          int[] tilesH = Arrays.copyOfRange(tiles, 8, 16);
+          for (int i = 0; i < 8; i++) {
+            tilesH[i] = tilesH[i] - 8;
+          }
+          caseNum = Solutions.getCase(tilesH);
+          int[] turns = Solutions.getSolutions(caseNum);
+        } else if (isSecondHalfComplete(tiles)) {
+          caseNum = Solutions.getCase(Arrays.copyOfRange(tiles, 0, 8));
+          int[] turns = Solutions.getSolutions(caseNum);
         }
-        if (prev == 8) {
-          // TODO: 1/20/2016 check for hint here
-          hintButton.setVisibility(View.VISIBLE);
-        }
-        if (prev == 16) { // FIXME: 12/23/2015 tileview size should be accessible and settable from the activity
-//          switchState(GameState.results);
-          switchState(GameState.highscore);
+        if (caseNum != 0) {
+          hintButton.setVisibility(View.VISIBLE); // TODO: 1/24/2016 implement timeout for hint button
         }
       }
     });
+
     gameView.setOnTouchListener(new View.OnTouchListener() {
       @Override
       public boolean onTouch(View view, MotionEvent event) {
@@ -143,20 +151,24 @@ public class GameActivity extends AppCompatActivity {
     restartButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        initGame();
+        newGame();
         switchState(GameState.started);
+        gameView.showTiles();
       }
     });
     startButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        initGame();
+        gameView.hideTiles();
+        newGame();
         switchState(GameState.started);
       }
     });
     buttonReset.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
+        gameView.setTiles(new int[] {1,2,3,4,5,6,7,8,9,10,15,11,13,14,16,12});
+        gameView.setDirection(0);
         gameView.resetTiles();
       }
     });
@@ -174,8 +186,10 @@ public class GameActivity extends AppCompatActivity {
     });
 
     if (savedInstanceState != null) {
-      time = savedInstanceState.getInt(STATE_TIME, 0);
-      score = savedInstanceState.getInt(STATE_SCORE, 0);
+      mTime = savedInstanceState.getInt(STATE_TIME, 0);
+      mScore = savedInstanceState.getInt(STATE_SCORE, 0);
+      boolean hintVisible = savedInstanceState.getBoolean(STATE_HINT, false);
+      hintButton.setVisibility(hintVisible ? View.VISIBLE : View.GONE);
       currentState = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
       gameTiles = savedInstanceState.getIntArray(STATE_TILES);
       int direction = savedInstanceState.getInt(STATE_DIRECTION);
@@ -184,20 +198,69 @@ public class GameActivity extends AppCompatActivity {
     }
   }
 
+  private boolean isWinningPosition(int[] tiles) {
+    int prev = 0;
+    for (int i = 0; i < 16; i++) {
+      if (tiles[i] - prev != 1)
+        break;
+      prev = tiles[i];
+    }
+    return prev == 16;
+  }
+
+  private boolean isFirstHalfComplete(int[] tiles) {
+    int prev = 0;
+    for (int i = 0; i < 8; i++) {
+      if (tiles[i] - prev != 1)
+        break;
+      prev = tiles[i];
+    }
+    return prev == 8;
+  }
+
+  private boolean isSecondHalfComplete(int[] tiles) {
+    int prev = 8;
+    for (int i = 8; i < 16; i++) {
+      if (tiles[i] - prev != 1)
+        break;
+      prev = tiles[i];
+    }
+    return prev == 16;
+  }
+
   private Animator getButtonAnim(LayoutTransition transition) {
     PropertyValuesHolder pvhScaleX = PropertyValuesHolder.ofFloat("scaleX", 2f, 1f);
     PropertyValuesHolder pvhScaleY = PropertyValuesHolder.ofFloat("scaleY", 2f, 1f);
     PropertyValuesHolder pvhAlpha = PropertyValuesHolder.ofFloat("alpha", 0f, .75f, 1f);
     PropertyValuesHolder pvhTranslY = PropertyValuesHolder.ofFloat("translationY", -800f, 0f);
-    Animator anim = ObjectAnimator.ofPropertyValuesHolder(transition, pvhAlpha, pvhTranslY, pvhScaleX, pvhScaleY).
+    Animator animator = ObjectAnimator.ofPropertyValuesHolder(transition, pvhAlpha, pvhTranslY, pvhScaleX, pvhScaleY).
       setDuration(600);
-    return anim;
+    animator.addListener(new AnimatorListenerAdapter() {
+      public void onAnimationEnd(Animator anim) {
+        View view = (View) ((ObjectAnimator) anim).getTarget();
+        if (view!=null) {
+          view.setVisibility(View.VISIBLE);
+          view.setAlpha(1f);
+          view.invalidate();
+        }
+      }
+    });
+    return animator;
+  }
+
+  private Animator getScreenAnim(LayoutTransition transition) {
+    PropertyValuesHolder pvhScaleX = PropertyValuesHolder.ofFloat("scaleX", 0f, 1f);
+    PropertyValuesHolder pvhScaleY = PropertyValuesHolder.ofFloat("scaleY", 0f, 1f);
+    PropertyValuesHolder pvhAlpha = PropertyValuesHolder.ofFloat("alpha", 0f, 1f);
+    Animator animator = ObjectAnimator.ofPropertyValuesHolder(transition, pvhAlpha, pvhScaleX, pvhScaleY);
+    return animator;
   }
 
   @Override
   public void onSaveInstanceState(Bundle savedInstanceState) {
-    savedInstanceState.putInt(STATE_SCORE, score);
-    savedInstanceState.putInt(STATE_TIME, time);
+    savedInstanceState.putInt(STATE_SCORE, mScore);
+    savedInstanceState.putInt(STATE_TIME, mTime);
+    savedInstanceState.putBoolean(STATE_HINT, hintButton.getVisibility() == View.VISIBLE);
     savedInstanceState.putInt(STATE_DIRECTION, gameView.getDirection());
     savedInstanceState.putIntArray(STATE_TILES, gameView.getTiles());
     currentState = currentState == GameState.results ? GameState.welcome : currentState;
@@ -209,13 +272,13 @@ public class GameActivity extends AppCompatActivity {
   @Override
   protected void onStart() {
     super.onStart();
-    Log.i(TAG, "onStart: ");
+    Log.i(TAG, "onStart: " + currentState.toString());
     switchState(currentState);
   }
 
 
   @Override
-  public void onWindowFocusChanged(boolean hasFocus) {
+  public void  onWindowFocusChanged(boolean hasFocus) {
     super.onWindowFocusChanged(hasFocus);
     if (hasFocus) {
       if (currentState == GameState.started) {
@@ -257,8 +320,8 @@ public class GameActivity extends AppCompatActivity {
   }
 
   private void printTime() {
-    int minutes = time / 60;
-    int secs = time % 60;
+    int minutes = mTime / 60;
+    int secs = mTime % 60;
     String timeStr = String.format("%1$d:%2$02d", minutes, secs);
     timeView.setText(timeStr);
   }
@@ -268,7 +331,7 @@ public class GameActivity extends AppCompatActivity {
       mRunnable = new Runnable() {
         @Override
         public void run() {
-          time += 1;
+          mTime += 1;
           printTime();
         }
       };
@@ -290,17 +353,27 @@ public class GameActivity extends AppCompatActivity {
     }
   }
 
-  private void initGame() {
-    score = 0;
-    time = 0;
-    gameView.shuffleTiles();
+  private void newGame() {
+    mScore = 0;
+    mTime = 0;
+    ArrayList<Integer> nums = new ArrayList<>();
+    for (int i = 0; i < (16); i++) {
+      nums.add(i + 1);
+    }
+    Collections.shuffle(nums);
+    int[] newNums = new int[nums.size()];
+    for (int i = 0; i < nums.size(); i++)
+      newNums[i] = nums.get(i);
+
+    gameView.setTiles(newNums);
+    gameView.setDirection(0);
   }
 
   private void putPlayerDB() {
     if (mDbHelper == null)
       mDbHelper = new DbOpenHelper(this);
     SQLiteDatabase db = mDbHelper.getWritableDatabase();
-    Player player = Player.newPlayer("test1", score, time);
+    Player player = Player.newPlayer("test1", mScore, mTime);
     cupboard().withDatabase(db).put(player);
   }
 
@@ -331,15 +404,25 @@ public class GameActivity extends AppCompatActivity {
       case started:
         if (hasWindowFocus()) {
           initTimer();
-          printTime();
           mTimer.scheduleAtFixedRate(mTimerTask, 1000L, 1000L);
         }
-        scoreView.setText(String.valueOf(score));
+        printTime();
+        scoreView.setText(String.valueOf(mScore));
         welcomeScreen.setVisibility(View.GONE);
         highscoreScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
-        hintButton.setVisibility(View.GONE);
-        gameScreen.setVisibility(View.VISIBLE);
+        if (gameScreen.getVisibility() != View.VISIBLE) {
+          container.getLayoutTransition().getAnimator(LayoutTransition.APPEARING).addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+              super.onAnimationEnd(animation);
+              Log.i(TAG, "APPEARING onAnimationEnd:");
+              gameView.showTiles();
+              container.getLayoutTransition().getAnimator(LayoutTransition.APPEARING).removeAllListeners();
+            }
+          });
+          gameScreen.setVisibility(View.VISIBLE);
+        }
         break;
       case results:
         stopTimer();

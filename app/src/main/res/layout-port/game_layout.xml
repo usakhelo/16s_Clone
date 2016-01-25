@@ -11,7 +11,7 @@
         android:layout_height="300dp"
         android:id="@+id/welcome_screen"
         android:layout_centerVertical="true"
-        android:visibility="visible"
+        android:visibility="gone"
         >
 
         <ImageView
@@ -51,7 +51,7 @@
         android:layout_alignParentTop="true"
         android:paddingTop="10dp"
         android:id="@+id/game_screen"
-        android:visibility="visible"
+        android:visibility="gone"
         android:animateLayoutChanges="true"
         >
         <TextView
@@ -133,6 +133,7 @@
             android:id="@+id/button_hint"
             android:text="@string/hint"
             android:visibility="gone"
+            android:alpha = "0"
             />
         <Button
             android:layout_width="wrap_content"
