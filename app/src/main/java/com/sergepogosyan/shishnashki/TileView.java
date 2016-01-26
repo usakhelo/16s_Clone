@@ -79,6 +79,13 @@ public class TileView extends View {
     initButtons();
   }
 
+  public void addCommands(List<GameCommand> cmds) {
+    commandQueue.addAll(cmds);
+    if (moveAnimatorSet == null || !moveAnimatorSet.isRunning()) {
+      commandQueue.poll().doCommand();
+    }
+  }
+
   public void addCommand(GameCommand cmd) {
     commandQueue.offer(cmd);
 //    if (buttonAnimatorSet != null && buttonAnimatorSet.isRunning())
@@ -173,9 +180,16 @@ public class TileView extends View {
       public void onAnimationEnd(Animator animation) {
         super.onAnimationEnd(animation);
         mDirectionTexture = 1 - mDirectionTexture;
-        startButtonsAnimation().start();
-        if (!commandQueue.isEmpty())
-          commandQueue.poll().doCommand();
+        Animator startAnim = startButtonsAnimation();
+        startAnim.addListener(new AnimatorListenerAdapter() {
+          @Override
+          public void onAnimationEnd(Animator animation) {
+            super.onAnimationEnd(animation);
+            if (!commandQueue.isEmpty())
+              commandQueue.poll().doCommand();
+          }
+        });
+        startAnim.start();
       }
     });
     mDirectionTexture = mDirection;
@@ -327,6 +341,14 @@ public class TileView extends View {
       }
     }
     return null;
+  }
+
+  public void pressButton(int buttonNumber) {
+    RotateButton button;
+    if (buttonNumber < mButtons.size()) {
+      button = mButtons.get(buttonNumber);
+      pressButton(button);
+    }
   }
 
   public void pressButton(RotateButton button) {

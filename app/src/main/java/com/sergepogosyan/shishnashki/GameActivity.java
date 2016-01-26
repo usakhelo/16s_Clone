@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -26,6 +27,7 @@ import com.sergepogosyan.shishnashki.db.Player;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -98,11 +100,72 @@ public class GameActivity extends AppCompatActivity {
     Button restartButton = (Button) findViewById(R.id.restart_button);
     hintButton = (Button) findViewById(R.id.button_hint);
 
+    hintButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        int[] tiles = gameView.getTiles();
+        int caseNum = 0;
+        if (isFirstHalfComplete(tiles)) {
+          int[] tilesH = Arrays.copyOfRange(tiles, 8, 16);
+          for (int i = 0; i < 8; i++) {
+            tilesH[i] = tilesH[i] - 8;
+          }
+          caseNum = Solutions.getCase(tilesH);
+          int[] turns = Solutions.getSolutions(caseNum);
+          Log.i(TAG, "onHint1: " + caseNum);
+          Log.i(TAG, "onHint1: " + Arrays.toString(turns));
+          List<TileView.GameCommand> cmdList = new ArrayList<TileView.GameCommand>(turns.length);
+          for (final int turn : turns) {
+            cmdList.add(new TileView.GameCommand() {
+              @Override
+              public void doCommand() {
+                int buttonNumber = 0;
+                if (turn < 4) {
+                  gameView.setDirection(1);
+                  buttonNumber = turn - 1 + 6;
+                } else {
+                  gameView.setDirection(0);
+                  buttonNumber = turn - 4 + 6;
+                }
+                gameView.pressButton(buttonNumber);
+              }
+            });
+          }
+          gameView.addCommands(cmdList);
+        } else if (isSecondHalfComplete(tiles)) {
+          caseNum = Solutions.getCase(Arrays.copyOfRange(tiles, 0, 8));
+          int[] turns = Solutions.getSolutions(caseNum);
+          Log.i(TAG, "onHint2: " + caseNum);
+          Log.i(TAG, "onHint2: " + Arrays.toString(turns));
+          List<TileView.GameCommand> cmdList = new ArrayList<TileView.GameCommand>(turns.length);
+          for (final int turn : turns) {
+            cmdList.add(new TileView.GameCommand() {
+              @Override
+              public void doCommand() {
+                int buttonNumber = 0;
+                if (turn < 4) {
+                  gameView.setDirection(1);
+                  buttonNumber = turn - 1;
+                } else {
+                  gameView.setDirection(0);
+                  buttonNumber = turn - 4;
+                }
+                gameView.pressButton(buttonNumber);
+              }
+            });
+          }
+          gameView.addCommands(cmdList);
+        }
+      }
+    });
+
     gameView.setOnTurnListener(new TileView.OnTurnListener() {
       @Override
       public void onTurn() {
         mScore += 1;
         scoreView.setText(String.valueOf(mScore));
+        if (hintButton.getVisibility() == View.VISIBLE)
+          hintButton.setVisibility(View.GONE);
 
         int[] tiles = gameView.getTiles();
         int caseNum = 0;
@@ -111,17 +174,15 @@ public class GameActivity extends AppCompatActivity {
 //          switchState(GameState.highscore);
         } else if (isFirstHalfComplete(tiles)) {
           int[] tilesH = Arrays.copyOfRange(tiles, 8, 16);
-          for (int i = 0; i < 8; i++) {
+          for (int i = 0; i < 8; i++)
             tilesH[i] = tilesH[i] - 8;
-          }
+
           caseNum = Solutions.getCase(tilesH);
-          int[] turns = Solutions.getSolutions(caseNum);
         } else if (isSecondHalfComplete(tiles)) {
           caseNum = Solutions.getCase(Arrays.copyOfRange(tiles, 0, 8));
-          int[] turns = Solutions.getSolutions(caseNum);
         }
         if (caseNum != 0) {
-          hintButton.setVisibility(View.VISIBLE); // TODO: 1/24/2016 implement timeout for hint button
+          hintButton.setVisibility(View.VISIBLE);
         }
       }
     });
@@ -229,12 +290,13 @@ public class GameActivity extends AppCompatActivity {
   }
 
   private Animator getButtonAnim(LayoutTransition transition) {
-    PropertyValuesHolder pvhScaleX = PropertyValuesHolder.ofFloat("scaleX", 2f, 1f);
-    PropertyValuesHolder pvhScaleY = PropertyValuesHolder.ofFloat("scaleY", 2f, 1f);
+    PropertyValuesHolder pvhScaleX = PropertyValuesHolder.ofFloat("scaleX", 0f, 1f);
+    PropertyValuesHolder pvhScaleY = PropertyValuesHolder.ofFloat("scaleY", 0f, 1f);
     PropertyValuesHolder pvhAlpha = PropertyValuesHolder.ofFloat("alpha", 0f, .75f, 1f);
-    PropertyValuesHolder pvhTranslY = PropertyValuesHolder.ofFloat("translationY", -800f, 0f);
-    Animator animator = ObjectAnimator.ofPropertyValuesHolder(transition, pvhAlpha, pvhTranslY, pvhScaleX, pvhScaleY).
-      setDuration(600);
+//    PropertyValuesHolder pvhTranslY = PropertyValuesHolder.ofFloat("translationY", -800f, 0f);
+    Animator animator = ObjectAnimator.ofPropertyValuesHolder(transition, pvhAlpha, pvhScaleX, pvhScaleY).
+      setDuration(300);
+    animator.setInterpolator(new OvershootInterpolator());
     animator.addListener(new AnimatorListenerAdapter() {
       public void onAnimationEnd(Animator anim) {
         View view = (View) ((ObjectAnimator) anim).getTarget();
@@ -356,6 +418,7 @@ public class GameActivity extends AppCompatActivity {
   private void newGame() {
     mScore = 0;
     mTime = 0;
+    hintButton.setVisibility(View.GONE);
     ArrayList<Integer> nums = new ArrayList<>();
     for (int i = 0; i < (16); i++) {
       nums.add(i + 1);

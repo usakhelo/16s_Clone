@@ -8,41 +8,59 @@
     >
     <RelativeLayout
         android:layout_width="wrap_content"
-        android:layout_height="300dp"
+        android:layout_height="450dp"
         android:id="@+id/welcome_screen"
         android:layout_centerVertical="true"
         android:visibility="gone"
+        android:background="@drawable/dialog_rect01"
         >
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:src="@drawable/dialog_rect01"
-            android:scaleType="fitCenter"
-            android:id="@+id/image"
-            />
+        <!--<ImageView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:padding="10dp"-->
+            <!--android:src="@drawable/dialog_rect01"-->
+            <!--android:scaleType="fitCenter"-->
+            <!--android:id="@+id/image"-->
+            <!--/>-->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/text1"
-            android:textSize="30sp"
+            android:textSize="@dimen/title_text_size"
             android:paddingLeft="15dp"
             android:paddingRight="15dp"
+            android:layout_marginBottom="@dimen/start_title_vertical_margin"
             android:textColor="@android:color/white"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:text="@string/welcome_text1"/>
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="@dimen/start_button_width"
             android:layout_height="wrap_content"
             android:id="@+id/start_button"
-            android:layout_marginBottom="40dp"
             android:layout_centerHorizontal="true"
-            android:layout_alignBottom="@id/image"
-            android:textSize="30sp"
+            android:layout_marginBottom="@dimen/start_button_vertical_margin"
+            android:layout_below="@id/text1"
+            android:textSize="@dimen/title_text_size"
             android:text="@string/start"/>
+        <Button
+            android:layout_width="@dimen/start_button_width"
+            android:layout_height="wrap_content"
+            android:id="@+id/about_button"
+            android:layout_marginBottom="@dimen/start_button_vertical_margin"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/start_button"
+            android:textSize="@dimen/title_text_size"
+            android:text="@string/about"/>
+        <Button
+            android:layout_width="@dimen/start_button_width"
+            android:layout_height="wrap_content"
+            android:id="@+id/rate_button"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/about_button"
+            android:textSize="@dimen/title_text_size"
+            android:text="@string/rate"/>
     </RelativeLayout>
 
     <RelativeLayout

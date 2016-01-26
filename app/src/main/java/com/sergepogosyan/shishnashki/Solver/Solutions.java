@@ -40,151 +40,151 @@ public class Solutions {
         solution = Storage1.checkCase18(fullCaseNum);
         break;
       case 21:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage2.checkCase21(fullCaseNum);
         break;
       case 23:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage2.checkCase23(fullCaseNum);
         break;
       case 24:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage2.checkCase24(fullCaseNum);
         break;
       case 25:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage2.checkCase25(fullCaseNum);
         break;
       case 26:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage2.checkCase26(fullCaseNum);
         break;
       case 27:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage2.checkCase27(fullCaseNum);
         break;
       case 28:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage2.checkCase28(fullCaseNum);
         break;
       case 31:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage3.checkCase31(fullCaseNum);
         break;
       case 32:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage3.checkCase32(fullCaseNum);
         break;
       case 34:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage3.checkCase34(fullCaseNum);
         break;
       case 35:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage3.checkCase35(fullCaseNum);
         break;
       case 36:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage3.checkCase36(fullCaseNum);
         break;
       case 37:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage3.checkCase37(fullCaseNum);
         break;
       case 38:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage3.checkCase38(fullCaseNum);
         break;
       case 41:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage4.checkCase41(fullCaseNum);
         break;
       case 42:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage4.checkCase42(fullCaseNum);
         break;
       case 43:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage4.checkCase43(fullCaseNum);
         break;
       case 45:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage4.checkCase45(fullCaseNum);
         break;
       case 46:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage4.checkCase46(fullCaseNum);
         break;
       case 47:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage4.checkCase47(fullCaseNum);
         break;
       case 48:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage4.checkCase48(fullCaseNum);
         break;
       case 51:
         solution = Storage5.checkCase51(fullCaseNum);
         break;
       case 52:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage5.checkCase52(fullCaseNum);
         break;
       case 53:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage5.checkCase53(fullCaseNum);
         break;
       case 54:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage5.checkCase54(fullCaseNum);
         break;
       case 56:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage5.checkCase56(fullCaseNum);
         break;
       case 57:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage5.checkCase57(fullCaseNum);
         break;
       case 58:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage5.checkCase58(fullCaseNum);
         break;
       case 61:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage6.checkCase61(fullCaseNum);
         break;
       case 62:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage6.checkCase62(fullCaseNum);
         break;
       case 63:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage6.checkCase63(fullCaseNum);
         break;
       case 64:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage6.checkCase64(fullCaseNum);
         break;
       case 65:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage6.checkCase65(fullCaseNum);
         break;
       case 67:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage6.checkCase67(fullCaseNum);
         break;
       case 68:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage6.checkCase68(fullCaseNum);
         break;
       case 71:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage7.checkCase71(fullCaseNum);
         break;
       case 72:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage7.checkCase72(fullCaseNum);
         break;
       case 73:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage7.checkCase73(fullCaseNum);
         break;
       case 74:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage7.checkCase74(fullCaseNum);
         break;
       case 75:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage7.checkCase75(fullCaseNum);
         break;
       case 76:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage7.checkCase76(fullCaseNum);
         break;
       case 78:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage7.checkCase78(fullCaseNum);
         break;
       case 81:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage8.checkCase81(fullCaseNum);
         break;
       case 82:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage8.checkCase82(fullCaseNum);
         break;
       case 83:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage8.checkCase83(fullCaseNum);
         break;
       case 84:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage8.checkCase84(fullCaseNum);
         break;
       case 85:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage8.checkCase85(fullCaseNum);
         break;
       case 86:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage8.checkCase86(fullCaseNum);
         break;
       case 87:
-        solution = Storage1.checkCase12(fullCaseNum);
+        solution = Storage8.checkCase87(fullCaseNum);
         break;
     }
 
@@ -193,8 +193,8 @@ public class Solutions {
       String temp = String.valueOf(solution);
       int cap = temp.length();
       turns = new int[cap];
-      for (int i = 0; i < cap; i++) {
-        turns[i] = Integer.valueOf(temp.substring(i, i+1));
+      for (int i = cap; i > 0; i--) {
+        turns[cap - i] = Integer.valueOf(temp.substring(i-1, i));
       }
     }
     return turns;
