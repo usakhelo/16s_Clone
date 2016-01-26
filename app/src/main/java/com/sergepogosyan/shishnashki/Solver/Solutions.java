@@ -2,10 +2,18 @@ package com.sergepogosyan.shishnashki.solver;
 
 public class Solutions {
 
-  public static int getCase(int[] tiles) {
+  public static int getCaseL(int[] tiles) {
     StringBuilder str = new StringBuilder();
     for (int i : tiles) {
       str.append(i);
+    }
+    return Integer.parseInt(str.toString());
+  }
+
+  public static int getCaseH(int[] tiles) {
+    StringBuilder str = new StringBuilder();
+    for (int i : tiles) {
+      str.append(i - 8);
     }
     return Integer.parseInt(str.toString());
   }

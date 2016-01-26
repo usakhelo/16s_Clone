@@ -104,58 +104,34 @@ public class GameActivity extends AppCompatActivity {
       @Override
       public void onClick(View v) {
         int[] tiles = gameView.getTiles();
-        int caseNum = 0;
-        if (isFirstHalfComplete(tiles)) {
-          int[] tilesH = Arrays.copyOfRange(tiles, 8, 16);
-          for (int i = 0; i < 8; i++) {
-            tilesH[i] = tilesH[i] - 8;
+        List<TileView.GameCommand> cmdList = new ArrayList<>();
+        boolean firstHalf = isFirstHalfComplete(tiles);
+
+        int caseNum = firstHalf ? Solutions.getCaseH(Arrays.copyOfRange(tiles, 8, 16)) : Solutions.getCaseL(Arrays.copyOfRange(tiles, 0, 8));
+        int[] turns = Solutions.getSolutions(caseNum);
+        int prevDirection = 0;
+        for (int turn : turns) {
+          final int buttonNumber;
+          if (turn < 4) {
+            if (prevDirection != 1) {
+              cmdList.add(directionCommand(1));
+              prevDirection = 1;
+            }
+            buttonNumber = turn - 1;
+          } else {
+            if (prevDirection != 0) {
+              cmdList.add(directionCommand(0));
+              prevDirection = 0;
+            }
+            buttonNumber = turn - 4;
           }
-          caseNum = Solutions.getCase(tilesH);
-          int[] turns = Solutions.getSolutions(caseNum);
-          Log.i(TAG, "onHint1: " + caseNum);
-          Log.i(TAG, "onHint1: " + Arrays.toString(turns));
-          List<TileView.GameCommand> cmdList = new ArrayList<TileView.GameCommand>(turns.length);
-          for (final int turn : turns) {
-            cmdList.add(new TileView.GameCommand() {
-              @Override
-              public void doCommand() {
-                int buttonNumber = 0;
-                if (turn < 4) {
-                  gameView.setDirection(1);
-                  buttonNumber = turn - 1 + 6;
-                } else {
-                  gameView.setDirection(0);
-                  buttonNumber = turn - 4 + 6;
-                }
-                gameView.pressButton(buttonNumber);
-              }
-            });
-          }
-          gameView.addCommands(cmdList);
-        } else if (isSecondHalfComplete(tiles)) {
-          caseNum = Solutions.getCase(Arrays.copyOfRange(tiles, 0, 8));
-          int[] turns = Solutions.getSolutions(caseNum);
-          Log.i(TAG, "onHint2: " + caseNum);
-          Log.i(TAG, "onHint2: " + Arrays.toString(turns));
-          List<TileView.GameCommand> cmdList = new ArrayList<TileView.GameCommand>(turns.length);
-          for (final int turn : turns) {
-            cmdList.add(new TileView.GameCommand() {
-              @Override
-              public void doCommand() {
-                int buttonNumber = 0;
-                if (turn < 4) {
-                  gameView.setDirection(1);
-                  buttonNumber = turn - 1;
-                } else {
-                  gameView.setDirection(0);
-                  buttonNumber = turn - 4;
-                }
-                gameView.pressButton(buttonNumber);
-              }
-            });
-          }
-          gameView.addCommands(cmdList);
+          if (firstHalf)
+            cmdList.add(buttonCommandH(buttonNumber));
+          else
+            cmdList.add(buttonCommandL(buttonNumber));
         }
+        gameView.setEnabled(false);
+        gameView.addCommands(cmdList);
       }
     });
 
@@ -172,18 +148,17 @@ public class GameActivity extends AppCompatActivity {
         if (isWinningPosition(tiles)) {
           switchState(GameState.results);
 //          switchState(GameState.highscore);
-        } else if (isFirstHalfComplete(tiles)) {
-          int[] tilesH = Arrays.copyOfRange(tiles, 8, 16);
-          for (int i = 0; i < 8; i++)
-            tilesH[i] = tilesH[i] - 8;
-
-          caseNum = Solutions.getCase(tilesH);
-        } else if (isSecondHalfComplete(tiles)) {
-          caseNum = Solutions.getCase(Arrays.copyOfRange(tiles, 0, 8));
+        } else if (gameView.isEnabled()) {
+          if (isFirstHalfComplete(tiles)) {
+            caseNum = Solutions.getCaseH(Arrays.copyOfRange(tiles, 8, 16));
+          } else if (isSecondHalfComplete(tiles)) {
+            caseNum = Solutions.getCaseL(Arrays.copyOfRange(tiles, 0, 8));
+          }
+          if (caseNum != 0) {
+            hintButton.setVisibility(View.VISIBLE);
+          }
         }
-        if (caseNum != 0) {
-          hintButton.setVisibility(View.VISIBLE);
-        }
+        Log.i(TAG, "setOnTurnListener: " + Thread.currentThread().getName());
       }
     });
 
@@ -196,15 +171,10 @@ public class GameActivity extends AppCompatActivity {
         float x = event.getX();
         float y = event.getY();
 
-        final RotateButton pressedButton = gameView.findButton(x, y);
+        final int pressedButton = gameView.findButton(x, y);
 
-        if (pressedButton != null) {
-          gameView.addCommand(new TileView.GameCommand() {
-            @Override
-            public void doCommand() {
-              gameView.pressButton(pressedButton);
-            }
-          });
+        if (pressedButton != -1) {
+          gameView.addCommand(buttonCommandL(pressedButton));
         }
         return true;
       }
@@ -236,13 +206,7 @@ public class GameActivity extends AppCompatActivity {
     buttonReverse.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        gameView.addCommand(new TileView.GameCommand() {
-          @Override
-          public void doCommand() {
-            gameView.setDirectionAnim(1 - gameView.getDirection());
-          }
-        });
-
+        gameView.addCommand(directionCommand(1 - gameView.getDirection()));
       }
     });
 
@@ -257,6 +221,36 @@ public class GameActivity extends AppCompatActivity {
       gameView.setDirection(direction);
       gameView.setTiles(gameTiles);
     }
+  }
+
+  private TileView.GameCommand buttonCommandL(final int number) {
+    return (new TileView.GameCommand() {
+      @Override
+      public void doCommand() {
+        gameView.pressButton(number);
+        Log.i(TAG, "buttonCommandL: " + Thread.currentThread().getName());
+      }
+    });
+  }
+  private TileView.GameCommand buttonCommandH(final int number) {
+    return (new TileView.GameCommand() {
+      @Override
+      public void doCommand() {
+        gameView.pressButton(number + 6);
+        Log.i(TAG, "buttonCommandH: " + Thread.currentThread().getName());
+      }
+    });
+  }
+
+  private TileView.GameCommand directionCommand(final int direction) {
+    return (new TileView.GameCommand() {
+      @Override
+      public void doCommand() {
+        gameView.setDirectionAnim(direction);
+        Log.i(TAG, "directionCommand: " + Thread.currentThread().getName());
+
+      }
+    });
   }
 
   private boolean isWinningPosition(int[] tiles) {
@@ -419,6 +413,7 @@ public class GameActivity extends AppCompatActivity {
     mScore = 0;
     mTime = 0;
     hintButton.setVisibility(View.GONE);
+    gameView.setEnabled(true);
     ArrayList<Integer> nums = new ArrayList<>();
     for (int i = 0; i < (16); i++) {
       nums.add(i + 1);

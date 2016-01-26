@@ -331,16 +331,16 @@ public class TileView extends View {
     moveAnimatorSet.start();
   }
 
-  public RotateButton findButton(float x, float y) {
+  public int findButton(float x, float y) {
     for (RotateButton button : mButtons) {
       float butX = button.getPosition().x;
       float butY = button.getPosition().y;
       double squareDistance = Math.pow(butX - x, 2) + Math.pow(butY - y, 2);
       if (squareDistance <= Math.pow(button.getSize() / 2f, 2) ) {
-        return button;
+        return mButtons.indexOf(button);
       }
     }
-    return null;
+    return -1;
   }
 
   public void pressButton(int buttonNumber) {
@@ -351,7 +351,7 @@ public class TileView extends View {
     }
   }
 
-  public void pressButton(RotateButton button) {
+  private void pressButton(RotateButton button) {
     if (button == null)
       return;
 
