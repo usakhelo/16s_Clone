@@ -43,27 +43,23 @@ public class GameActivity extends AppCompatActivity {
   static final String STATE_TIME = "time";
   static final String STATE_HINT = "hint"; //if hint button was shown
 
-  enum GameState {welcome, started, results, highscore, finished}
+  enum GameState {welcome, started, results, highScore, finished}
   private GameState currentState;
-  private int[] gameTiles;
   private TileView gameView;
   private Handler mHandler;
   private Timer mTimer;
   private TimerTask mTimerTask;
   private DbOpenHelper mDbHelper;
   private Runnable mRunnable;
-  private ListView highscoreList;
-  private View welcomeScreen, gameScreen, highscoreScreen, resultsScreen;
+  private ListView highScoreList;
+  private View welcomeScreen, gameScreen, highScoreScreen, resultsScreen;
   private TextView scoreView, timeView;
   private ViewGroup container;
   private Button hintButton;
 
   private int mTime, mScore;
-  // TODO: 12/10/2015 add to welcome screen - "like" button
   // TODO: 12/10/2015 add to results screen - scoreView
-  // TODO: 12/10/2015 implement hints and solution algorithm
-  // TODO: 1/21/2016  complete highscore table
-
+  // TODO: 1/21/2016  complete highScore table
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -85,8 +81,8 @@ public class GameActivity extends AppCompatActivity {
 
     welcomeScreen = findViewById(R.id.welcome_screen);
     resultsScreen = findViewById(R.id.result_screen);
-    highscoreScreen = findViewById(R.id.highscore_screen);
-    highscoreList = (ListView) findViewById(R.id.highscore_list);
+    highScoreScreen = findViewById(R.id.highscore_screen);
+    highScoreList = (ListView) findViewById(R.id.highscore_list);
     gameView = (TileView) findViewById(R.id.game_view);
     scoreView = (TextView) findViewById(R.id.score);
     timeView = (TextView) findViewById(R.id.time);
@@ -105,11 +101,19 @@ public class GameActivity extends AppCompatActivity {
       public void onClick(View v) {
         int[] tiles = gameView.getTiles();
         List<TileView.GameCommand> cmdList = new ArrayList<>();
+        cmdList.add(new TileView.GameCommand() {
+          @Override
+          public void doCommand() {
+            gameView.setEnabled(false);
+            gameView.runNextCommand();
+          }
+        });
+
         boolean firstHalf = isFirstHalfComplete(tiles);
 
         int caseNum = firstHalf ? Solutions.getCaseH(Arrays.copyOfRange(tiles, 8, 16)) : Solutions.getCaseL(Arrays.copyOfRange(tiles, 0, 8));
         int[] turns = Solutions.getSolutions(caseNum);
-        int prevDirection = 0;
+        int prevDirection = gameView.getDirection();
         for (int turn : turns) {
           final int buttonNumber;
           if (turn < 4) {
@@ -130,7 +134,13 @@ public class GameActivity extends AppCompatActivity {
           else
             cmdList.add(buttonCommandL(buttonNumber));
         }
-        gameView.setEnabled(false);
+        cmdList.add(new TileView.GameCommand() {
+          @Override
+          public void doCommand() {
+            gameView.setEnabled(true);
+            gameView.runNextCommand();
+          }
+        });
         gameView.addCommands(cmdList);
       }
     });
@@ -147,7 +157,7 @@ public class GameActivity extends AppCompatActivity {
         int caseNum = 0;
         if (isWinningPosition(tiles)) {
           switchState(GameState.results);
-//          switchState(GameState.highscore);
+//          switchState(GameState.highScore);
         } else if (gameView.isEnabled()) {
           if (isFirstHalfComplete(tiles)) {
             caseNum = Solutions.getCaseH(Arrays.copyOfRange(tiles, 8, 16));
@@ -216,7 +226,7 @@ public class GameActivity extends AppCompatActivity {
       boolean hintVisible = savedInstanceState.getBoolean(STATE_HINT, false);
       hintButton.setVisibility(hintVisible ? View.VISIBLE : View.GONE);
       currentState = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
-      gameTiles = savedInstanceState.getIntArray(STATE_TILES);
+      int[] gameTiles = savedInstanceState.getIntArray(STATE_TILES);
       int direction = savedInstanceState.getInt(STATE_DIRECTION);
       gameView.setDirection(direction);
       gameView.setTiles(gameTiles);
@@ -369,7 +379,7 @@ public class GameActivity extends AppCompatActivity {
       case results:
         switchState(GameState.welcome);
         break;
-      case highscore:
+      case highScore:
         switchState(GameState.welcome);
         break;
     }
@@ -413,7 +423,6 @@ public class GameActivity extends AppCompatActivity {
     mScore = 0;
     mTime = 0;
     hintButton.setVisibility(View.GONE);
-    gameView.setEnabled(true);
     ArrayList<Integer> nums = new ArrayList<>();
     for (int i = 0; i < (16); i++) {
       nums.add(i + 1);
@@ -446,7 +455,7 @@ public class GameActivity extends AppCompatActivity {
 
     SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
         R.layout.list_item, playerCursor, fromColumns, toViews, 0);
-    highscoreList.setAdapter(adapter);
+    highScoreList.setAdapter(adapter);
   }
 
   private void switchState(GameState state) {
@@ -454,7 +463,7 @@ public class GameActivity extends AppCompatActivity {
     switch (state) {
       case welcome:
         stopTimer();
-        highscoreScreen.setVisibility(View.GONE);
+        highScoreScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
         gameScreen.setVisibility(View.GONE);
         welcomeScreen.setVisibility(View.VISIBLE);
@@ -467,7 +476,7 @@ public class GameActivity extends AppCompatActivity {
         printTime();
         scoreView.setText(String.valueOf(mScore));
         welcomeScreen.setVisibility(View.GONE);
-        highscoreScreen.setVisibility(View.GONE);
+        highScoreScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
         if (gameScreen.getVisibility() != View.VISIBLE) {
           container.getLayoutTransition().getAnimator(LayoutTransition.APPEARING).addListener(new AnimatorListenerAdapter() {
@@ -486,11 +495,11 @@ public class GameActivity extends AppCompatActivity {
         stopTimer();
         resultsScreen.setVisibility(View.VISIBLE);
         break;
-      case highscore:
+      case highScore:
         stopTimer();
         putPlayerDB();
         fillHighscores();
-        highscoreScreen.setVisibility(View.VISIBLE);
+        highScoreScreen.setVisibility(View.VISIBLE);
         break;
       case finished:
         finish();

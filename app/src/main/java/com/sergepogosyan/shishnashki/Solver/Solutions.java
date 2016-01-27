@@ -21,8 +21,6 @@ public class Solutions {
   // Better than static final field -> allows VM to unload useless String
   // Because you need this string only once per application life on the device
   public static int[] getSolutions(int fullCaseNum) {
-    // TODO: 1/15/2016 return map of solutions for specified range
-    // TODO: 1/22/2016 check memory consumpution, probably keeping two arrays of int and long is better than map 
     long solution = 0;
     int caseNum = Integer.valueOf(String.valueOf(fullCaseNum).substring(0, 2));
     switch (caseNum) {

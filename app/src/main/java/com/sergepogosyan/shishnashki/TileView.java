@@ -22,7 +22,6 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -82,7 +81,7 @@ public class TileView extends View {
   public void addCommands(List<GameCommand> cmds) {
     commandQueue.addAll(cmds);
     if (moveAnimatorSet == null || !moveAnimatorSet.isRunning()) {
-      commandQueue.poll().doCommand();
+      runNextCommand();
     }
   }
 
@@ -90,7 +89,17 @@ public class TileView extends View {
     commandQueue.offer(cmd);
 //    if (buttonAnimatorSet != null && buttonAnimatorSet.isRunning())
     if (moveAnimatorSet == null || !moveAnimatorSet.isRunning()) {
-      commandQueue.poll().doCommand();
+      runNextCommand();
+    }
+  }
+
+  public void runNextCommand() {
+    if (((View)this.getParent()).getVisibility() == View.VISIBLE) {
+      if (commandQueue != null && !commandQueue.isEmpty())
+        commandQueue.poll().doCommand();
+    } else {
+      commandQueue.clear();
+      this.setEnabled(true);
     }
   }
 
@@ -185,8 +194,7 @@ public class TileView extends View {
           @Override
           public void onAnimationEnd(Animator animation) {
             super.onAnimationEnd(animation);
-            if (!commandQueue.isEmpty())
-              commandQueue.poll().doCommand();
+            runNextCommand();
           }
         });
         startAnim.start();
@@ -403,8 +411,7 @@ public class TileView extends View {
         postInvalidate();
         mOnTurnListener.onTurn();
         Log.i(TAG, "pressButton onAnimationEnd:");
-        if (!commandQueue.isEmpty())
-          commandQueue.poll().doCommand();
+        runNextCommand();
       }
     });
     moveAnimatorSet.start();
