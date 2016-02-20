@@ -23,6 +23,7 @@ import android.widget.TextView;
 import com.sergepogosyan.shishnashki.solver.Solutions;
 import com.sergepogosyan.shishnashki.db.DbOpenHelper;
 import com.sergepogosyan.shishnashki.db.Player;
+import com.sergepogosyan.shishnashki.views.TileView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +60,8 @@ public class GameActivity extends AppCompatActivity {
 
   private int mTime, mScore;
   // TODO: 12/10/2015 add to results screen - scoreView
-  // TODO: 1/21/2016  complete highScore table
+  // TODO: 1/21/2016  complete highscore table
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -84,7 +86,7 @@ public class GameActivity extends AppCompatActivity {
     highScoreScreen = findViewById(R.id.highscore_screen);
     highScoreList = (ListView) findViewById(R.id.highscore_list);
     gameView = (TileView) findViewById(R.id.game_view);
-    scoreView = (TextView) findViewById(R.id.score);
+    scoreView = (TextView) findViewById(R.id.turns);
     timeView = (TextView) findViewById(R.id.time);
 
     mTimer = new Timer();
@@ -94,6 +96,7 @@ public class GameActivity extends AppCompatActivity {
     Button buttonReverse = (Button) findViewById(R.id.button_reverse);
     Button startButton = (Button) findViewById(R.id.start_button);
     Button restartButton = (Button) findViewById(R.id.restart_button);
+    Button restartButton2 = (Button) findViewById(R.id.restart_button2);
     hintButton = (Button) findViewById(R.id.button_hint);
 
     hintButton.setOnClickListener(new View.OnClickListener() {
@@ -156,8 +159,8 @@ public class GameActivity extends AppCompatActivity {
         int[] tiles = gameView.getTiles();
         int caseNum = 0;
         if (isWinningPosition(tiles)) {
-          switchState(GameState.results);
-//          switchState(GameState.highScore);
+//          switchState(GameState.results);
+          switchState(GameState.highScore);
         } else if (gameView.isEnabled()) {
           if (isFirstHalfComplete(tiles)) {
             caseNum = Solutions.getCaseH(Arrays.copyOfRange(tiles, 8, 16));
@@ -187,6 +190,14 @@ public class GameActivity extends AppCompatActivity {
           gameView.addCommand(buttonCommandL(pressedButton));
         }
         return true;
+      }
+    });
+    restartButton2.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        newGame();
+        switchState(GameState.started);
+        gameView.showTiles();
       }
     });
     restartButton.setOnClickListener(new View.OnClickListener() {
@@ -315,8 +326,8 @@ public class GameActivity extends AppCompatActivity {
   }
 
   private Animator getScreenAnim(LayoutTransition transition) {
-    PropertyValuesHolder pvhScaleX = PropertyValuesHolder.ofFloat("scaleX", 0f, 1f);
-    PropertyValuesHolder pvhScaleY = PropertyValuesHolder.ofFloat("scaleY", 0f, 1f);
+    PropertyValuesHolder pvhScaleX = PropertyValuesHolder.ofFloat("scaleX", .5f, 1f);
+    PropertyValuesHolder pvhScaleY = PropertyValuesHolder.ofFloat("scaleY", .5f, 1f);
     PropertyValuesHolder pvhAlpha = PropertyValuesHolder.ofFloat("alpha", 0f, 1f);
     Animator animator = ObjectAnimator.ofPropertyValuesHolder(transition, pvhAlpha, pvhScaleX, pvhScaleY);
     return animator;
@@ -448,12 +459,12 @@ public class GameActivity extends AppCompatActivity {
     if (mDbHelper == null)
       mDbHelper = new DbOpenHelper(this);
     SQLiteDatabase db = mDbHelper.getReadableDatabase();
-    Cursor playerCursor = cupboard().withDatabase(db).query(Player.class).getCursor();
+    Cursor playerCursor = cupboard().withDatabase(db).query(Player.class).limit(5).getCursor();
 
-    String[] fromColumns = {"name", "score", "time"};
-    int[] toViews = {R.id.player_name, R.id.player_score, R.id.player_time};
+    String[] fromColumns = {"_id", "name", "score", "time"};
+    int[] toViews = {R.id.player_icon, R.id.player_name, R.id.player_score, R.id.player_time};
 
-    SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
+    SimpleCursorAdapter adapter = new HighScoreAdapter(this,
         R.layout.list_item, playerCursor, fromColumns, toViews, 0);
     highScoreList.setAdapter(adapter);
   }

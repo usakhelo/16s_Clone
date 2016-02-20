@@ -4,12 +4,13 @@
     <string name="welcome_text1">Sort all tiles from 1 to 16</string>
     <string name="result_text1">You made it!</string>
     <string name="play_again">Play again!</string>
+    <string name="highscore_title">Highscore</string>
     <string name="reverse">Reverse</string>
     <string name="shuffle">Shuffle</string>
     <string name="reset">Reset</string>
     <string name="hint">Hint</string>
     <string name="time">Time</string>
-    <string name="score">Score</string>
+    <string name="turns">Turns</string>
     <string name="start">Start!</string>
     <string name="about">About</string>
     <string name="rate">Rate</string>

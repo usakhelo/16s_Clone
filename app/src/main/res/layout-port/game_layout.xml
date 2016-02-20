@@ -6,148 +6,142 @@
     android:id="@+id/container"
     android:animateLayoutChanges="true"
     >
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="450dp"
-        android:id="@+id/welcome_screen"
-        android:layout_centerVertical="true"
-        android:visibility="gone"
-        android:background="@drawable/dialog_rect01"
-        >
-        <!--<ImageView-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:padding="10dp"-->
-            <!--android:src="@drawable/dialog_rect01"-->
-            <!--android:scaleType="fitCenter"-->
-            <!--android:id="@+id/image"-->
-            <!--/>-->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/text1"
-            android:textSize="@dimen/title_text_size"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
-            android:layout_marginBottom="@dimen/start_title_vertical_margin"
-            android:textColor="@android:color/white"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:text="@string/welcome_text1"/>
-
-        <Button
-            android:layout_width="@dimen/start_button_width"
-            android:layout_height="wrap_content"
-            android:id="@+id/start_button"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="@dimen/start_button_vertical_margin"
-            android:layout_below="@id/text1"
-            android:textSize="@dimen/title_text_size"
-            android:text="@string/start"/>
-        <Button
-            android:layout_width="@dimen/start_button_width"
-            android:layout_height="wrap_content"
-            android:id="@+id/about_button"
-            android:layout_marginBottom="@dimen/start_button_vertical_margin"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/start_button"
-            android:textSize="@dimen/title_text_size"
-            android:text="@string/about"/>
-        <Button
-            android:layout_width="@dimen/start_button_width"
-            android:layout_height="wrap_content"
-            android:id="@+id/rate_button"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/about_button"
-            android:textSize="@dimen/title_text_size"
-            android:text="@string/rate"/>
-    </RelativeLayout>
-
-    <RelativeLayout
+    <com.sergepogosyan.shishnashki.views.SquareLayoutView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:paddingTop="10dp"
-        android:id="@+id/game_screen"
+        android:layout_centerInParent="true"
+        android:layout_margin="@dimen/screen_margin"
+        android:background="@color/screenBackground"
+        android:id="@+id/welcome_screen"
         android:visibility="gone"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical"
+            android:visibility="visible"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/text1"
+                android:layout_gravity="center_horizontal"
+                android:textSize="@dimen/title_text_size"
+                android:textColor="@android:color/white"
+                android:text="@string/welcome_text1"/>
+
+            <Button
+                android:layout_width="@dimen/start_button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/start_button"
+                android:textSize="@dimen/title_text_size"
+                android:text="@string/start"/>
+            <Button
+                android:layout_width="@dimen/start_button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/about_button"
+                android:textSize="@dimen/title_text_size"
+                android:text="@string/about"/>
+            <Button
+                android:layout_width="@dimen/start_button_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/rate_button"
+                android:textSize="@dimen/title_text_size"
+                android:text="@string/rate"/>
+        </LinearLayout>
+    </com.sergepogosyan.shishnashki.views.SquareLayoutView>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_margin="@dimen/screen_margin"
+        android:id="@+id/game_screen"
+        android:visibility="visible"
         android:animateLayoutChanges="true"
         >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:paddingLeft="5dp"
-            android:paddingStart="5dp"
-            android:textSize="20sp"
-            android:id="@+id/text_score"
-            android:text="@string/score"
-            />
-        <TextView
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_below="@id/text_score"
-            android:paddingLeft="5dp"
-            android:paddingStart="5dp"
-            android:paddingRight="5dp"
-            android:paddingEnd="5dp"
-            android:textSize="30sp"
-            android:gravity="start"
-            android:id="@+id/score"
-            android:text="@string/score_str"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:textSize="20sp"
-            android:paddingRight="5dp"
-            android:paddingEnd="5dp"
-            android:id="@+id/text_time"
-            android:text="@string/time"
-            />
-        <TextView
+            android:layout_gravity="top">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:paddingLeft="5dp"
+                android:paddingStart="5dp"
+                android:textSize="20sp"
+                android:id="@+id/text_turns"
+                android:text="@string/turns"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@id/text_turns"
+                android:paddingLeft="5dp"
+                android:paddingStart="5dp"
+                android:paddingRight="5dp"
+                android:paddingEnd="5dp"
+                android:textSize="30sp"
+                android:gravity="start"
+                android:id="@+id/turns"
+                android:text="@string/score_str"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:textSize="20sp"
+                android:paddingRight="5dp"
+                android:paddingEnd="5dp"
+                android:id="@+id/text_time"
+                android:text="@string/time"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_below="@id/text_time"
+                android:textSize="30sp"
+                android:paddingLeft="5dp"
+                android:paddingStart="5dp"
+                android:paddingRight="5dp"
+                android:paddingEnd="5dp"
+                android:gravity="end"
+                android:id="@+id/time"
+                android:text="@string/time_str"
+                />
+        </RelativeLayout>
+
+        <com.sergepogosyan.shishnashki.views.TileView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_below="@id/text_time"
-            android:textSize="30sp"
-            android:paddingLeft="5dp"
-            android:paddingStart="5dp"
-            android:paddingRight="5dp"
-            android:paddingEnd="5dp"
-            android:gravity="end"
-            android:id="@+id/time"
-            android:text="@string/time_str"
-            />
-        <com.sergepogosyan.shishnashki.TileView
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
+            android:layout_height="match_parent"
             android:background="#FFF"
             android:padding="10dp"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@id/score"
+            android:layout_gravity="center"
             android:id="@+id/game_view"
             />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/game_view"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
+            android:layout_gravity="bottom|left"
             android:id="@+id/button_reset"
             android:text="@string/reset"
             />
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/game_view"
-            android:layout_centerHorizontal="true"
+            android:layout_gravity="bottom|center_horizontal"
             android:id="@+id/button_hint"
             android:text="@string/hint"
             android:visibility="gone"
@@ -156,71 +150,96 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/game_view"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
+            android:layout_gravity="bottom|right"
             android:id="@+id/button_reverse"
             android:text="@string/reverse"
             />
-    </RelativeLayout>
-    <RelativeLayout
+    </FrameLayout>
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/result_screen"
-        android:background="#80000000"
+        android:background="@color/semiDark"
         android:visibility="gone"
         android:clickable="true"
         >
+        <com.sergepogosyan.shishnashki.views.SquareLayoutView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/screen_margin"
+            android:background="@color/screenBackground"
+            >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_gravity="center"
+                >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/text2"
+                    android:textSize="30sp"
+                    android:layout_gravity="center_horizontal"
+                    android:textColor="@android:color/white"
+                    android:text="@string/result_text1"/>
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:id="@+id/restart_button"
+                    android:textSize="30sp"
+                    android:text="@string/play_again"/>
+            </LinearLayout>
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="350dp"
-            android:layout_centerVertical="true"
-            android:padding="10dp"
-            android:src="@drawable/dialog_rect01"
-            android:scaleType="fitCenter"
-            android:id="@+id/image2"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/text2"
-            android:textSize="30sp"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
-            android:textColor="@android:color/white"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:text="@string/result_text1"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/restart_button"
-            android:layout_marginBottom="40dp"
-            android:layout_centerHorizontal="true"
-            android:layout_alignBottom="@id/image2"
-            android:textSize="30sp"
-            android:text="@string/play_again"/>
-    </RelativeLayout>
-    <RelativeLayout
+        </com.sergepogosyan.shishnashki.views.SquareLayoutView>
+    </FrameLayout>
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/highscore_screen"
-        android:background="#80000000"
+        android:background="@color/semiDark"
         android:visibility="gone"
         android:clickable="true"
         >
-        <ListView
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:textColor="@android:color/white"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:background="@drawable/dialog_rect01"
-            android:id="@+id/highscore_list"/>
-    </RelativeLayout>
+            android:layout_margin="@dimen/screen_margin"
+            android:layout_gravity="center">
+            <com.sergepogosyan.shishnashki.views.SquareView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/square4"
+                android:background="@color/screenBackground"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentTop="true"
+                android:id="@+id/highscore_title"
+                android:text="@string/highscore_title"
+                android:textSize="30sp"
+                />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_alignBottom="@id/square4"
+                android:id="@+id/restart_button2"
+                android:textSize="30sp"
+                android:text="@string/play_again"/>
+            <ListView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/highscore_title"
+                android:layout_above="@id/restart_button2"
+                android:textColor="@android:color/white"
+                android:id="@+id/highscore_list"/>
+        </RelativeLayout>
+    </FrameLayout>
 
 
 </RelativeLayout>

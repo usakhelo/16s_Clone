@@ -1,4 +1,4 @@
-package com.sergepogosyan.shishnashki;
+package com.sergepogosyan.shishnashki.views;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -20,6 +20,10 @@ import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
+
+import com.sergepogosyan.shishnashki.R;
+import com.sergepogosyan.shishnashki.RotateButton;
+import com.sergepogosyan.shishnashki.Tile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -344,7 +348,7 @@ public class TileView extends View {
       float butX = button.getPosition().x;
       float butY = button.getPosition().y;
       double squareDistance = Math.pow(butX - x, 2) + Math.pow(butY - y, 2);
-      if (squareDistance <= Math.pow(button.getSize() / 2f, 2) ) {
+      if (squareDistance <= Math.pow(button.getSize() / 1.5f, 2) ) {
         return mButtons.indexOf(button);
       }
     }
