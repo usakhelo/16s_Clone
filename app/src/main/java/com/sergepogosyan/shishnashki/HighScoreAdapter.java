@@ -14,14 +14,12 @@ import android.widget.SimpleCursorAdapter;
 public class HighScoreAdapter extends SimpleCursorAdapter {
 
   private static final String TAG = "shishnashki adapter";
-  private Context context;
   private Bitmap iconBitmap;
   private int tileWidth, tileHeight;
 
   public HighScoreAdapter(Context context, int layout, Cursor c, String[] from, int[] to, int flags) {
     super(context, layout, c, from, to, flags);
 
-    this.context = context;
     this.iconBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.tiles);
 
     tileWidth = iconBitmap.getWidth() / 16;

@@ -66,7 +66,7 @@ public class GameActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    currentState = GameState.welcome;
+    currentState = GameState.highScore;
 
     Log.i(TAG, "onCreate: " + savedInstanceState);
     setContentView(R.layout.game_layout);
@@ -459,7 +459,7 @@ public class GameActivity extends AppCompatActivity {
     if (mDbHelper == null)
       mDbHelper = new DbOpenHelper(this);
     SQLiteDatabase db = mDbHelper.getReadableDatabase();
-    Cursor playerCursor = cupboard().withDatabase(db).query(Player.class).limit(5).getCursor();
+    Cursor playerCursor = cupboard().withDatabase(db).query(Player.class).limit(10).getCursor();
 
     String[] fromColumns = {"_id", "name", "score", "time"};
     int[] toViews = {R.id.player_icon, R.id.player_name, R.id.player_score, R.id.player_time};
@@ -508,7 +508,7 @@ public class GameActivity extends AppCompatActivity {
         break;
       case highScore:
         stopTimer();
-        putPlayerDB();
+        putPlayerDB();  //// FIXME: 3/8/2016 player should go to DB only after finishing the game. Now it is added even after turning screen of while highscore screen is on.
         fillHighscores();
         highScoreScreen.setVisibility(View.VISIBLE);
         break;

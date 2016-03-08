@@ -16,4 +16,10 @@
     <string name="rate">Rate</string>
     <string name="score_str">0</string>
     <string name="time_str">0:00</string>
+
+    <string name="rank_column">#</string>
+    <string name="name_column">Name</string>
+    <string name="turns_column">Turns</string>
+    <string name="time_column">Time</string>
+    <string name="hint_column">Hint</string>
 </resources>
