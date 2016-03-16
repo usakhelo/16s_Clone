@@ -191,7 +191,7 @@
         android:layout_height="match_parent"
         android:id="@+id/highscore_screen"
         android:background="@color/semiDark"
-        android:visibility="gone"
+        android:visibility="visible"
         android:clickable="true"
         >
         <RelativeLayout
@@ -275,8 +275,6 @@
                 android:layout_below="@id/table_header"
                 android:layout_above="@id/restart_button2"
                 android:textColor="@android:color/white"
-                android:layout_marginLeft="@dimen/square_border_padding"
-                android:layout_marginRight="@dimen/square_border_padding"
                 android:id="@+id/highscore_list">
             </ListView>
         </RelativeLayout>

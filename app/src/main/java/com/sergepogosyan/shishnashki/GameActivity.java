@@ -57,6 +57,7 @@ public class GameActivity extends AppCompatActivity {
   private TextView scoreView, timeView;
   private ViewGroup container;
   private Button hintButton;
+  private int playerId;
 
   private int mTime, mScore;
   // TODO: 12/10/2015 add to results screen - scoreView
@@ -160,6 +161,7 @@ public class GameActivity extends AppCompatActivity {
         int caseNum = 0;
         if (isWinningPosition(tiles)) {
 //          switchState(GameState.results);
+          putPlayerDB();  //// FIXME: 3/16/2016 should put player to highscore only when not using hint
           switchState(GameState.highScore);
         } else if (gameView.isEnabled()) {
           if (isFirstHalfComplete(tiles)) {
@@ -452,20 +454,35 @@ public class GameActivity extends AppCompatActivity {
       mDbHelper = new DbOpenHelper(this);
     SQLiteDatabase db = mDbHelper.getWritableDatabase();
     Player player = Player.newPlayer("test1", mScore, mTime);
-    cupboard().withDatabase(db).put(player);
+    playerId = (int)cupboard().withDatabase(db).put(player);
+    Log.i(TAG, "putPlayerDB:playerId " + playerId);
   }
 
   private void fillHighscores() {
     if (mDbHelper == null)
       mDbHelper = new DbOpenHelper(this);
     SQLiteDatabase db = mDbHelper.getReadableDatabase();
-    Cursor playerCursor = cupboard().withDatabase(db).query(Player.class).limit(10).getCursor();
+    Cursor playerCursor = cupboard().withDatabase(db).query(Player.class).orderBy("time").limit(10).getCursor();
 
     String[] fromColumns = {"_id", "name", "score", "time"};
     int[] toViews = {R.id.player_icon, R.id.player_name, R.id.player_score, R.id.player_time};
 
     SimpleCursorAdapter adapter = new HighScoreAdapter(this,
         R.layout.list_item, playerCursor, fromColumns, toViews, 0);
+    adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+      @Override
+      public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+        if (columnIndex == 0) {
+          int id = cursor.getInt(columnIndex);
+          if (id == playerId) {
+            Log.i(TAG, "setViewValue: id" + id);
+            View parentView = (View)view.getParent();
+            parentView.setBackgroundResource(R.color.blueTile);
+          }
+        }
+        return false;
+      }
+    });
     highScoreList.setAdapter(adapter);
   }
 
@@ -508,7 +525,6 @@ public class GameActivity extends AppCompatActivity {
         break;
       case highScore:
         stopTimer();
-        putPlayerDB();  //// FIXME: 3/8/2016 player should go to DB only after finishing the game. Now it is added even after turning screen of while highscore screen is on.
         fillHighscores();
         highScoreScreen.setVisibility(View.VISIBLE);
         break;

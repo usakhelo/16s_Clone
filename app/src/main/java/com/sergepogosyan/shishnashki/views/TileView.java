@@ -124,7 +124,7 @@ public class TileView extends View {
 
   public void resetTiles() {
     if (moveAnimatorSet != null && moveAnimatorSet.isRunning()) {
-      Log.i(TAG, "resetTiles: " + moveAnimatorSet);
+//      Log.i(TAG, "resetTiles: " + moveAnimatorSet);
       return;
     }
     showTiles();

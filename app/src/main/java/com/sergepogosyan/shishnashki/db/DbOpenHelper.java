@@ -9,7 +9,7 @@ import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 public class DbOpenHelper extends SQLiteOpenHelper {
   private static final String DATABASE_NAME = "sixteen_tiles.db";
-  private static final int DATABASE_VERSION = 6;
+  private static final int DATABASE_VERSION = 8;
   private static final String TAG = "shishnashki database";
 
   static {

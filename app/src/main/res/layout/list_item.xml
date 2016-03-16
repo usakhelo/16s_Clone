@@ -4,7 +4,10 @@
               android:layout_height="@dimen/highscore_item_height"
               android:orientation="horizontal"
               android:weightSum="4"
-                >
+              android:paddingLeft="@dimen/square_border_padding"
+              android:paddingRight="@dimen/square_border_padding"
+
+    >
     <ImageView
         android:layout_width="@dimen/highscore_item_height"
         android:layout_height="wrap_content"
