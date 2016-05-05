@@ -28,18 +28,12 @@ public class HighScoreAdapter extends SimpleCursorAdapter {
 
   @Override
   public void setViewImage(ImageView v, String value) {
-    super.setViewImage(v, value);
-    int num = 0;
-    try {
-      num = Integer.parseInt(value);
-    } catch (Exception e) {
-      Log.e(TAG, "Could not get player id");
-    }
+//    super.setViewImage(v, value);
 
-    // FIXME: 3/16/2016 image should be assigned based on rank afer ordering
+    int num = getCursor().getPosition();
+
     // FIXME: 3/16/2016 setview should probably go to Binder class
-    v.setImageBitmap(Bitmap.createBitmap(iconBitmap, (--num) * tileWidth, 0, tileWidth, tileHeight));
+    v.setImageBitmap(Bitmap.createBitmap(iconBitmap, (num) * tileWidth, 0, tileWidth, tileHeight));
     v.setScaleType(ImageView.ScaleType.FIT_CENTER);
-//    Log.i(TAG, "setViewImage:" + v + ":" + value);
   }
 }

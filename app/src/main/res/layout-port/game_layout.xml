@@ -1,10 +1,12 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/container"
     android:animateLayoutChanges="true"
+    tools:ignore="MissingPrefix"
     >
     <com.sergepogosyan.shishnashki.views.SquareLayoutView
         android:layout_width="match_parent"
@@ -31,6 +33,7 @@
                 android:layout_gravity="center_horizontal"
                 android:textSize="@dimen/header_text_size"
                 android:textColor="@android:color/white"
+                fontPath="fonts/LuckiestGuy.ttf"
                 android:text="@string/welcome_text1"/>
 
             <Button
@@ -39,21 +42,26 @@
                 android:layout_gravity="center_horizontal"
                 android:id="@+id/start_button"
                 android:textSize="@dimen/body_text_size"
-                android:text="@string/start"/>
+                android:text="@string/start"
+                fontPath="fonts/LuckiestGuy.ttf"
+                />
             <Button
                 android:layout_width="@dimen/start_button_width"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:id="@+id/about_button"
                 android:textSize="@dimen/body_text_size"
-                android:text="@string/about"/>
+                android:text="@string/about"
+                fontPath="fonts/LuckiestGuy.ttf"
+                />
             <Button
                 android:layout_width="@dimen/start_button_width"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:id="@+id/rate_button"
                 android:textSize="@dimen/body_text_size"
-                android:text="@string/rate"/>
+                android:text="@string/rate"
+                />
         </LinearLayout>
     </com.sergepogosyan.shishnashki.views.SquareLayoutView>
 

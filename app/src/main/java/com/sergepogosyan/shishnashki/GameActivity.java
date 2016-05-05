@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.LayoutTransition;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -32,6 +33,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
 import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 public class GameActivity extends AppCompatActivity {
@@ -42,6 +45,7 @@ public class GameActivity extends AppCompatActivity {
   static final String STATE_DIRECTION = "direction";
   static final String STATE_SCORE = "score";
   static final String STATE_TIME = "time";
+  static final String STATE_PLAYERID = "lastPlayer";
   static final String STATE_HINT = "hint"; //if hint button was shown
 
   enum GameState {welcome, started, results, highScore, finished}
@@ -57,17 +61,23 @@ public class GameActivity extends AppCompatActivity {
   private TextView scoreView, timeView;
   private ViewGroup container;
   private Button hintButton;
+  private boolean hintWasUsed;
   private int playerId;
-
   private int mTime, mScore;
+
   // TODO: 12/10/2015 add to results screen - scoreView
   // TODO: 1/21/2016  complete highscore table
+
+  @Override
+  protected void attachBaseContext(Context newBase) {
+    super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+  }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    currentState = GameState.highScore;
+    currentState = GameState.welcome;
 
     Log.i(TAG, "onCreate: " + savedInstanceState);
     setContentView(R.layout.game_layout);
@@ -103,6 +113,7 @@ public class GameActivity extends AppCompatActivity {
     hintButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
+        hintWasUsed = true;
         int[] tiles = gameView.getTiles();
         List<TileView.GameCommand> cmdList = new ArrayList<>();
         cmdList.add(new TileView.GameCommand() {
@@ -160,17 +171,22 @@ public class GameActivity extends AppCompatActivity {
         int[] tiles = gameView.getTiles();
         int caseNum = 0;
         if (isWinningPosition(tiles)) {
-//          switchState(GameState.results);
-          putPlayerDB();  //// FIXME: 3/16/2016 should put player to highscore only when not using hint
-          switchState(GameState.highScore);
-        } else if (gameView.isEnabled()) {
+          if (!hintWasUsed) {
+            putPlayerDB();
+            switchState(GameState.highScore);
+          } else {
+            switchState(GameState.results);
+          }
+        } else if ((!hintWasUsed) && gameView.isEnabled()) {
           if (isFirstHalfComplete(tiles)) {
             caseNum = Solutions.getCaseH(Arrays.copyOfRange(tiles, 8, 16));
           } else if (isSecondHalfComplete(tiles)) {
             caseNum = Solutions.getCaseL(Arrays.copyOfRange(tiles, 0, 8));
           }
           if (caseNum != 0) {
-            hintButton.setVisibility(View.VISIBLE);
+            double rand = Math.random() * 100;
+            if (rand > 50 && rand < 60)
+              hintButton.setVisibility(View.VISIBLE);
           }
         }
         Log.i(TAG, "setOnTurnListener: " + Thread.currentThread().getName());
@@ -180,6 +196,9 @@ public class GameActivity extends AppCompatActivity {
     gameView.setOnTouchListener(new View.OnTouchListener() {
       @Override
       public boolean onTouch(View view, MotionEvent event) {
+        if (hintWasUsed)
+          return false;
+
         if (event.getAction() != MotionEvent.ACTION_DOWN) {
           return false;
         }
@@ -188,7 +207,7 @@ public class GameActivity extends AppCompatActivity {
 
         final int pressedButton = gameView.findButton(x, y);
 
-        if (pressedButton != -1) {
+      if (pressedButton != -1) {
           gameView.addCommand(buttonCommandL(pressedButton));
         }
         return true;
@@ -221,15 +240,19 @@ public class GameActivity extends AppCompatActivity {
     buttonReset.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        gameView.setTiles(new int[] {1,2,3,4,5,6,7,8,9,10,15,11,13,14,16,12});
-        gameView.setDirection(0);
-        gameView.resetTiles();
+        if (!hintWasUsed) {
+          gameView.setTiles(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 11, 13, 14, 16, 12});
+          gameView.setDirection(0);
+          gameView.resetTiles();
+        }
       }
     });
     buttonReverse.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        gameView.addCommand(directionCommand(1 - gameView.getDirection()));
+        if (!hintWasUsed) {
+          gameView.addCommand(directionCommand(1 - gameView.getDirection()));
+        }
       }
     });
 
@@ -239,6 +262,8 @@ public class GameActivity extends AppCompatActivity {
       boolean hintVisible = savedInstanceState.getBoolean(STATE_HINT, false);
       hintButton.setVisibility(hintVisible ? View.VISIBLE : View.GONE);
       currentState = GameState.valueOf(savedInstanceState.getString(STATE_GAME, "welcome"));
+      if (currentState == GameState.highScore)
+        playerId = savedInstanceState.getInt(STATE_PLAYERID);
       int[] gameTiles = savedInstanceState.getIntArray(STATE_TILES);
       int direction = savedInstanceState.getInt(STATE_DIRECTION);
       gameView.setDirection(direction);
@@ -271,7 +296,6 @@ public class GameActivity extends AppCompatActivity {
       public void doCommand() {
         gameView.setDirectionAnim(direction);
         Log.i(TAG, "directionCommand: " + Thread.currentThread().getName());
-
       }
     });
   }
@@ -341,6 +365,7 @@ public class GameActivity extends AppCompatActivity {
     savedInstanceState.putInt(STATE_TIME, mTime);
     savedInstanceState.putBoolean(STATE_HINT, hintButton.getVisibility() == View.VISIBLE);
     savedInstanceState.putInt(STATE_DIRECTION, gameView.getDirection());
+    savedInstanceState.putInt(STATE_PLAYERID, playerId);
     savedInstanceState.putIntArray(STATE_TILES, gameView.getTiles());
     currentState = currentState == GameState.results ? GameState.welcome : currentState;
     savedInstanceState.putString(STATE_GAME, currentState.toString());
@@ -469,15 +494,17 @@ public class GameActivity extends AppCompatActivity {
 
     SimpleCursorAdapter adapter = new HighScoreAdapter(this,
         R.layout.list_item, playerCursor, fromColumns, toViews, 0);
+
     adapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
       @Override
       public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
         if (columnIndex == 0) {
           int id = cursor.getInt(columnIndex);
+          View parentView = (View)view.getParent();
           if (id == playerId) {
-            Log.i(TAG, "setViewValue: id" + id);
-            View parentView = (View)view.getParent();
             parentView.setBackgroundResource(R.color.blueTile);
+          } else {
+            parentView.setBackgroundResource(R.color.screenBackground);
           }
         }
         return false;
@@ -506,6 +533,7 @@ public class GameActivity extends AppCompatActivity {
         welcomeScreen.setVisibility(View.GONE);
         highScoreScreen.setVisibility(View.GONE);
         resultsScreen.setVisibility(View.GONE);
+        hintWasUsed = false;
         if (gameScreen.getVisibility() != View.VISIBLE) {
           container.getLayoutTransition().getAnimator(LayoutTransition.APPEARING).addListener(new AnimatorListenerAdapter() {
             @Override
